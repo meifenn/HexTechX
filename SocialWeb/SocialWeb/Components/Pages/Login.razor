@@ -1,0 +1,67 @@
+﻿@page "/Login"
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Login</PageTitle>
+<body>
+    <div class="header">HexTechX</div>
+    <div class="content">
+        <div class="login-container">
+            <form class="login-form">
+                <label for="username">Username</label>
+                <input type="text" id="username" @bind-value=@userName class="form-input" placeholder="Enter Username" required />
+                <label for="password">Password</label>
+                <input id="password" @bind-value=@password type="password" class="form-input" placeholder="Enter Password" required />
+                <div class="login-actions">
+                    <a href="/register" class="register-link">Register?</a>
+                    <button type="button" class="login-button @(btnDisabled == true ? "disabled" : "")" disabled="@btnDisabled" @onclick=ProcessLogin>
+                        @(btnDisabled == true ? "Processing" : "Login")
+                    </button>
+                </div>
+                @if (errorMessage != null)
+                {
+                    <div class="fs-16 text-danger">
+                        @errorMessage
+                    </div>
+                }
+            </form>
+        </div>
+    </div>
+</body>
+
+@code {
+    [Inject]
+    IUserApiRequest userRequest { get; set; }
+    @inject Blazored.LocalStorage.ILocalStorageService ls;
+    @inject IJSRuntime JSRuntime;
+
+    string? userName { get; set; }
+    string? password { get; set; }
+    string? errorMessage { get; set; }
+    bool? btnDisabled { get; set; } = false;
+
+    async Task ProcessLogin()
+    {
+        if(userName == null || password == null)
+        {
+            errorMessage = "Please fill in required credentials";
+            return;
+        }
+        btnDisabled = true;
+        errorMessage = null;
+
+        var authRes = await userRequest.Authenticate(userName ?? "", password ?? "");
+        if(authRes == "success")
+        {
+            var user = await userRequest.GetByName(userName);
+
+            await ls.SetItemAsync<int>("userId", user.ID);
+            await ls.SetItemAsync<string>("userName", user.UserName);
+            await JSRuntime.InvokeVoidAsync("navigateTo", "/");
+        }
+        else{
+            errorMessage = authRes;
+            btnDisabled = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+}

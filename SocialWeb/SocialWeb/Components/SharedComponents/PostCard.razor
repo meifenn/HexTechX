@@ -1,0 +1,71 @@
+﻿@inject IJSRuntime JSRuntime
+@using SocialWeb.Components
+<!-- Post 1 with Image-->
+@if(PostData != null)
+{
+    <div class="card mb-3" style="cursor: pointer;" @onclick="ShowPostDetail">
+        <div class="card-header d-flex align-items-center">
+            <img src="image/RaidenEi.png" alt="Avatar" class="rounded-circle me-3" width="40" height="40">
+            <div>
+                <h6 class="mb-0"><a herf="/Profile">@PostData.UploadedUserName</a></h6>
+                <small>@PostData.CreatedTime?.ToString("dd MMM yyyy hh:mm tt")</small>
+            </div>
+        </div>
+        <div class="card-body">
+            <p style="font:caption">@PostData.Title</p>
+            <div class="mb-2">
+                @{
+                    var tagList = PostData?.Tags.Split(",").ToList();
+                    foreach(var tag in tagList)
+                    {
+                        <div class="badge me-1">@tag</div>
+                    }
+                }
+
+            </div>
+            @if (!string.IsNullOrEmpty(PostData?.PhotoDatas))
+            {
+                <div class="d-flex images">
+                    @{
+                        var photoList = PostData?.PhotoDatas.Split(",").ToList();
+                        foreach(var photo in photoList)
+                        {
+                            <img src="https://via.placeholder.com/100" class="img-thumbnail me-2" alt="Image 1" />
+                        }
+                    }
+
+                </div>
+            }
+
+            <hr />
+            <div class="mt-3 actions">
+                <button class="btn btn-primary me-2"><i class="fa-solid fa-thumbs-up"></i> Like</button>
+                <button class="btn btn-primary"><i class="fa-solid fa-comment"></i> Comment</button>
+            </div>
+        </div>
+    </div>
+}
+
+<PopUpModal @ref="popUp" CloseCallBack="ClosePostDetailHandler" ModalTitle="PostDetail">
+    <PostDetail @ref="postDetail" post=@PostData ModalClose="ClosePostDetailHandler"></PostDetail>
+</PopUpModal>
+
+
+@code {
+    [Parameter]
+    public Post? PostData { get; set; }
+
+    PopUpModal popUp { get; set; }
+    PostDetail postDetail { get; set; }
+
+    void ShowPostDetail()
+    {
+        popUp.Show();
+    }
+
+    void ClosePostDetailHandler()
+    {
+        popUp.Close();
+    }
+}
+

@@ -1,0 +1,34 @@
+﻿@if (ShowModal)
+{
+    <div class="modal fade" id="PopUpModal_@ModalTitle" tabindex="-1" role="dialog" data-mdb-backdrop="static" data-bs-backdrop="static" data-backdrop="static">
+        @ChildContent
+    </div>
+}
+
+
+@code {
+    public bool ShowModal { get; set; } = false;
+    [Parameter]
+    public EventCallback<bool> CloseCallBack { get; set; }
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+    [Parameter]
+    public string? ModalTitle { get; set; }
+    [Inject]
+    IJSRuntime _js { get; set; }
+
+    public async void Show()
+    {
+        ShowModal = true;
+        await _js.InvokeVoidAsync("ShowModal", ModalTitle);
+        await InvokeAsync(StateHasChanged);
+
+    }
+
+    public async void Close()
+    {
+        ShowModal = false;
+        await _js.InvokeVoidAsync("CloseModal", ModalTitle);
+        await InvokeAsync(StateHasChanged);
+    }
+}

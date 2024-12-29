@@ -1,0 +1,48 @@
+﻿<div class="modal-dialog" role="document" style="max-width:1000px; max-height:800px;">
+    <div class="modal-content fix-width-modal-content">
+        <div class="modal-header justify-content-between">
+            <h5 class="modal-title">Post</h5>
+            <div class="d-flex align-self-end">
+                <button class="btn btn-secondary" @onclick="@Close">Close</button>
+            </div>
+        </div>
+        <div class="modal-body modal-body-scrollable">
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <input type="text" class="form-control" placeholder="Title..." style="border: 1px solid #ccc; border-radius: 8px; padding: 0.75rem;">
+            </div>
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <textarea class="form-control" placeholder="Caption..." rows="4" style="border: 1px solid #ccc; border-radius: 8px; padding: 0.75rem;"></textarea>
+            </div>
+            <div class="form-group">
+                <input type="text" class="form-control" placeholder="Add hashtags by typing '#' ..." style="border: 1px solid #ccc; border-radius: 8px; padding: 0.75rem;">
+            </div>
+            @* <div class="container"> *@
+            @*     <input /> *@
+
+            @* </div> *@
+        </div>
+        <div class="modal-footer" style="border-top: none; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
+            <button class="btn btn-primary pb-5" style="background-color: #5b93f6; border: none; cursor: pointer; height:40px; ">
+                <i class="bi bi-image" style=" font-size: 1.5rem;"></i> Photo
+            </button>
+            <button class="btn btn-primary" style="background-color: #5b93f6; border: none; padding: 0.5rem 1rem; border-radius: 8px;" @onclick="SubmitPost">
+                <i class="bi bi-send"></i> Post
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback ModalClose { get; set; }
+
+    public async Task Close()
+    {
+        await ModalClose.InvokeAsync();
+    }
+
+    private void SubmitPost()
+    {
+        // Add post submission logic here
+    }
+}

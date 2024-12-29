@@ -1,0 +1,47 @@
+﻿
+<div class="modal-dialog" role="document" style="max-width:1150px; max-height:1000px;">
+    <div class="modal-content fix-width-modal-content">
+        <div class="modal-header justify-content-between">
+            <h5 class="modal-title">Post Detail</h5>
+            <div class="d-flex align-self-end">
+                <button class="btn btn-secondary" @onclick="@Close">Close</button>
+            </div>
+        </div>
+        <div class="modal-body modal-body-scrollable">
+            <div class="container">
+                <PostCard PostData=@post></PostCard>
+                <hr />
+
+                <div class="comments-section shadow-lg rounded">
+                    <div class="comment ps-3 pt-2">
+                        <img src="image/RaidenEi.png" class="profile-pic" alt="Profile Picture">
+                        <div class="comment-text">
+                            <h6><strong>ppm</strong></h6>
+                            <small>12/25/2024</small>
+                            <hr />
+                            <p>Woooooo.</p>
+                        </div>
+                    </div>
+                    <div class="comment-input d-flex align-items-center w-100 mb-3 ps-3 pe-3">
+                        <input type="text" class="form-control me-2" placeholder="Post your comment...">
+                        <button class="btn btn-primary"><i class="bi bi-send"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @* <div class="modal-footer post-modal-footer"> *@
+    @* </div> *@
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback ModalClose { get; set; }
+    [Parameter]
+    public Post? post { get; set; }
+
+    public async Task Close()
+    {
+        await ModalClose.InvokeAsync();
+    }
+}

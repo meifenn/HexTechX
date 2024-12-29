@@ -1,0 +1,68 @@
+﻿@page "/Register"
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Register</PageTitle>
+<body>
+    <div class="header">HexTechX</div>
+    <div class="register-content">
+        <div class="register-container">
+            <EditForm Model="user" class="login-form">
+                <label for="username">Username</label>
+                <InputText id="username" @bind-value=@user.UserName type="text" placeholder="Enter Username" class="form-input" required />
+
+                <label for="password">Password</label>
+                <InputText id="password" @bind-value=@user.Password type="password" placeholder="Enter Password" class="form-input" required />
+
+                <label for="password">Confirm Password</label>
+                <InputText id="password" @bind-value=@confirmPassword type="password" placeholder="Enter Password Again" class="form-input" required />
+                @*   <label for="password">Profile Picture</label>
+                <input id="password" type="file" class="form-input" /> *@
+                <div class="login-actions">
+                    <button type="button" class="login-button bg-danger" @onclick="GotoLogin">Cancel</button>
+                    <button type="submit" class="login-button" @onclick=ProcessRegister>Register</button>
+                </div>
+                @if (errorMessage != null)
+                {
+                    <div class="fs-16 text-danger">
+                        @errorMessage
+                    </div>
+                }
+            </EditForm>
+
+        </div>
+    </div>
+</body>
+
+@code {
+    User user { get; set; } = new User();
+    [Inject]
+    IUserApiRequest userRequest { get; set; }
+
+    string? confirmPassword { get; set; }
+    string? errorMessage { get; set; }
+    bool? btnDisabled { get; set; } = false;
+
+    private async void GotoLogin()
+    {
+        await JSRuntime.InvokeVoidAsync("navigateTo", "/Login");
+    }
+    async Task ProcessRegister()
+    {
+        errorMessage = null;
+        if (user.Password != null && user.Password != confirmPassword)
+        {
+            errorMessage = "unmatched password.";
+            return;
+        }
+        btnDisabled = true;
+        var res = await userRequest.Insert(user);
+        if(res == "success")
+        {
+            await JSRuntime.InvokeVoidAsync("navigateTo", "/Login");
+        }else{
+            errorMessage = res;
+            btnDisabled = false;
+            StateHasChanged();
+        }
+    }
+}

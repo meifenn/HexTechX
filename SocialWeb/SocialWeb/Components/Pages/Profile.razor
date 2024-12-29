@@ -1,0 +1,178 @@
+﻿@page "/profile/{Uid:int}"
+@page "/profile"
+
+@inject IJSRuntime JSRuntime
+@using Infra.Helpers.ApiRequestHelper.UserApiRequest
+@using Infra.Models
+
+<PageTitle>HexTechX/ Profile</PageTitle>
+<div class="container mx-0 my-4">
+    <!-- Header -->
+    <header class="text-black text-left py-2 pb-1 position-relative">
+        <div class="d-flex position-relative">
+            <button class="btn btn-outline-light me-3 active" @onclick="GoToNewFeed">
+                <i class="bi bi-arrow-left"></i> Back
+            </button>
+            <h2 class="m-0">HexTechX</h2>
+        </div>
+    </header>
+    <hr />
+    <div class="row mt-2">
+        <!-- Sidebar -->
+        <aside class="col-md-3 text-center custom-sidebar">
+            <img class="rounded-circle profile-image mb-3" src="image/RaidenEi.png" alt="Profile Image" />
+            <h2 class="username">Profile</h2>
+            <!-- Friend Requests Dropdown -->
+
+            <div class="dropdown pe-2">
+                <button @onclick="ToggleFriendList" class="friend-list-button">
+                    Friend Lists (4)
+                </button>
+
+                @if (isDropdownVisibleFriList)
+                {
+                    <div class="friend-list-dropdown">
+                        @foreach (var friend in Friends)
+                        {
+                            <div class="friend-name d-flex justify-content-between align-items-center">
+                                <div class="me-auto">
+                                    @friend
+                                </div>
+                                <div>
+                                    <i class="fa-solid fa-trash text-danger" style="cursor: pointer;"></i>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- Friend List Dropdown -->
+            <div class="dropdown mt-2 pe-2">
+                <button @onclick="ToggleFriendRequest" class="friend-list-button">
+                    Friend Requests (4)
+                </button>
+
+                @if (isDropdownVisibleFriReq)
+                {
+                    <div class="friend-list-dropdown">
+                        @foreach (var friend in Friends)
+                        {
+                            <div class="friend-name d-flex justify-content-between align-items-center">
+                                <div class="me-auto">
+                                    @friend
+                                </div>
+                                <div>
+                                    <i class="fa-solid fa-check text-success" style="cursor: pointer;"></i>
+
+                                    <!-- Red Cross Icon -->
+                                    <i class="fa-solid fa-xmark text-danger" style="cursor: pointer;"></i>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="col-md-9">
+            <!-- Profile Info -->
+            <div class="mb-4 p-3 shadow-sm rounded profile-info">
+                <p><strong>Name: @user.UserName</strong></p>
+                <p><strong>Joined Since: @user.CreatedTime?.ToString("dd-MMM-yyyy hh:mm tt")</strong> </p>
+                <p><strong>Total Posts: 1 </strong> | <strong>Total Likes: 5</strong> </p>
+
+                <div class="button-container d-flex">
+                    <button class="btn btn-primary w-50">Add Friend +</button>
+                    <button class="edit-button w-20 ms-2">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                </div>
+            </div>
+            <!-- Posts -->
+            <section class="posts">
+                <h3 class="mb-3">Posts</h3>
+                <PostCard></PostCard>
+            </section>
+        </main>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int Uid { get; set; } = 1;
+
+
+    [Inject]
+    IUserApiRequest userRequest { get; set; }
+
+    private List<string> Friends = new List<string> { "John Doe", "Jane Smith", "Michael Johnson", "Emily Davis" };
+    private List<User> UserInfo { get; set; } = new List<User>();
+
+    User user { get; set; } = new User();
+    /// <summary>
+    /// DropDown
+    /// </summary>
+    private bool isDropdownVisibleFriList = false; 
+    private bool isDropdownVisibleFriReq = false;
+
+
+    private void ToggleFriendList()
+    {
+        isDropdownVisibleFriList = !isDropdownVisibleFriList;
+    }
+    private void ToggleFriendRequest()
+    {
+        isDropdownVisibleFriReq = !isDropdownVisibleFriReq; 
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender)
+        {
+            try
+            {
+                // Fetch user information by ID
+                user = await userRequest.GetByID(Uid);
+                // Set the username
+                user.UserName = user?.UserName ?? "Unknown User";
+                await InvokeAsync(StateHasChanged);
+                // if (user.CreatedTime.HasValue)
+                // {
+                //     JoinedYear = user.CreatedTime.Value.Year;
+                // }
+                // else
+                // {
+                //     JoinedYear = 0;
+                // }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching user data: {ex.Message}");
+                user.UserName = "Error loading user";
+            }
+        }
+     
+    }
+    // private string CalculateMembershipDuration(DateTime registerDate)
+    // {
+    //     var now = DateTime.UtcNow;
+    //     var difference = now - registerDate;
+
+    //     int years = (int)(difference.Days / 365.25); // Consider leap years
+    //     int months = (int)((difference.Days % 365.25) / 30.4); // Approximate month length
+
+    //     if (years > 0)
+    //         return $"{years} year(s) and {months} month(s)";
+    //     else
+    //         return $"{months} month(s)";
+    // }
+    private async void GoToNewFeed()
+    {
+        await JSRuntime.InvokeVoidAsync("navigateTo", "/");
+    }
+}
+
+
