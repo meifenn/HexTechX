@@ -22,14 +22,26 @@ namespace SocialAPI.Services.FriendRequests
                 return deleteRes;
             }
 
+            var reqUser = await _context.Users.FindAsync(req.FromUserID);
+            if (reqUser != null)
+            {
+                req.FromUserName = reqUser.UserName;
+            }
+            var sentUser = await _context.Users.FindAsync(req.ToUserID);
+            if (sentUser != null)
+            {
+                req.ToUserName = sentUser.UserName;
+            }
+
             req.RequestedTime = now;
+            req.IsAccepted = null;
             await _context.FriendRequests.AddAsync(req);
             var res = await _context.SaveChangesAsync();
             return res == 1 ? "success" : "fail";
         }
         public async Task<List<FriendRequest>> GetFriendRequest(int userId)
         {
-            var query = _context.FriendRequests.Where(a => a.ToUserID == userId).AsNoTracking();
+            var query = _context.FriendRequests.Where(a => a.ToUserID == userId && a.IsAccepted == null).AsNoTracking();
             return await query.ToListAsync() ?? new List<FriendRequest>();
         }
         public async Task<string> RespondFriendRequest(int Id, bool? IsAccept = true)
@@ -66,7 +78,7 @@ namespace SocialAPI.Services.FriendRequests
                 };
                 await _context.Friends.AddAsync(reverseFriend);
                 var result = await _context.SaveChangesAsync();
-                res = result == 1 ? "success" : "fail";
+                return "success";
             }
             else
             {

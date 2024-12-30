@@ -49,7 +49,7 @@ namespace SocialAPI.Services.Friends
                 _context.Friends.Remove(reverseFriend);
             }
             var res = await _context.SaveChangesAsync();
-            return res == 1 ? "success" : "fail";
+            return "success";
         }
     }
 }
