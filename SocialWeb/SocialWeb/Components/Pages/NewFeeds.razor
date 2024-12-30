@@ -41,7 +41,7 @@
                         <span class="category-item" @onclick="()=>SelectTag(null)">All</span>
                         foreach(var tag in tagList)
                         {
-                            <span class="category-item" @onclick="()=>SelectTag(tag.Text)">@tag.Text (@tag.PostCount)</span>
+                            <span class="category-item @(selctag == tag.Text ? "bg-dark text-light" : "")" @onclick="()=>SelectTag(tag.Text)">@tag.Text (@tag.PostCount)</span>
                         }
                     }
                     @*    <span class="category-item">#Travel</span>
@@ -118,7 +118,7 @@
     int page = 1;
     int pageSize = 10;
     string? search { get; set; }
-    string? tag { get; set; }
+    string? selctag { get; set; }
     Post detailPost { get; set; } = new Post();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -142,8 +142,8 @@
     async Task GetPosts(string? searchStr = null, string? selectedTag = null)
     {
         search = searchStr;
-        tag = selectedTag;
-        posts = await postRequest.GetPaging(page, pageSize, search, null, tag);
+        selctag = selectedTag;
+        posts = await postRequest.GetPaging(page, pageSize, search, null, selctag);
         if(posts.Results != null && posts.Results.Count() > 0)
         {
             postList.AddRange(posts.Results);
@@ -164,9 +164,9 @@
         postList = new List<Post>();
         if(string.IsNullOrEmpty(search))
         {
-            await GetPosts(null, tag);
+            await GetPosts(null, selctag);
         }else{
-            await GetPosts(search, tag);
+            await GetPosts(search, selctag);
         }
     }
 
