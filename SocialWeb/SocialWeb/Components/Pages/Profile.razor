@@ -1,4 +1,5 @@
 ﻿@page "/profile"
+@inject Blazored.LocalStorage.ILocalStorageService ls;
 @* @page "/profile/{Uid:int}" *@
 
 
@@ -28,54 +29,58 @@
 
             <div class="dropdown pe-2">
                 <button @onclick="ToggleFriendList" class="friend-list-button">
-                    Friend Lists (4)
+                    Friend Lists (@friList.Count())
                 </button>
 
                 @if (isDropdownVisibleFriList)
                 {
-                    <div class="friend-list-dropdown">
-                        @foreach (var friend in friList)
-                        {
-                            <div class="friend-name d-flex justify-content-between align-items-center">
-                                <div class="me-auto">
-                                    @friend.UserName
+                    @if (friList != null && friList.Count() > 0)
+                    {
+                        <div class="friend-list-dropdown">
+                            @foreach (var friend in friList)
+                            {
+                                <div class="friend-name d-flex justify-content-between align-items-center">
+                                    <div class="me-auto">
+                                        @friend.UserName
+                                    </div>
+                                    <div>
+                                        <i class="fa-solid fa-trash text-danger" style="cursor: pointer;" @onclick="()=> RemoveFriend(loginUser,friend.ID)"></i>
+                                    </div>
                                 </div>
-                                <div>
-                                    <i class="fa-solid fa-trash text-danger" style="cursor: pointer;"></i>
-                                </div>
-                            </div>
-                        }
-                    </div>
+                            }
+                        </div>
+                    }
                 }
             </div>
 
-            <!-- Friend List Dropdown -->
+            <!-- Friend Request List Dropdown -->
             <div class="dropdown mt-2 pe-2">
                 <button @onclick="ToggleFriendRequest" class="friend-list-button">
-                    Friend Requests (@friList.Count())
+                    Friend Requests (@friReqList.Count())
                 </button>
 
                 @if (isDropdownVisibleFriReq)
                 {
-                    <div class="friend-list-dropdown">
-                        @if (friList != null && friList.Count() > 0)
-                        {
-                            @foreach (var friend in Friends)
+                    @if (friReqList != null && friReqList.Count() > 0)
+                    {
+                        <div class="friend-list-dropdown">
+                            @foreach (var friendReq in friReqList)
                             {
                                 <div class="friend-name d-flex justify-content-between align-items-center">
                                     <div class="me-auto">
-                                        @friend
+                                        @friendReq.FromUserName
                                     </div>
                                     <div>
-                                        <i class="fa-solid fa-check text-success" style="cursor: pointer;"></i>
+                                        <i class="fa-solid fa-check text-success" style="cursor: pointer;" @onclick="()=> AcceptFriendRequest(friendReq.ID)"></i>
 
                                         <!-- Red Cross Icon -->
-                                        <i class="fa-solid fa-xmark text-danger" style="cursor: pointer;"></i>
+                                        <i class="fa-solid fa-xmark text-danger" style="cursor: pointer;" @onclick="()=> DeclineFriendRequest(friendReq.ID)"></i>
                                     </div>
                                 </div>
                             }
-                        }
-                    </div>
+
+                        </div>
+                    }
                 }
             </div>
         </aside>
@@ -113,16 +118,15 @@
     [Inject]
     IFriendRequestApiRequest FriReqRequest { get; set; }
 
-    @inject Blazored.LocalStorage.ILocalStorageService ls;
     [Parameter]
-    public int Uid { get; set; }
-
-
-    private List<string> Friends = new List<string> { "John Doe", "Jane Smith", "Michael Johnson", "Emily Davis" };
+    public int Uid { get; set; } = 1;
+    public int loginUser { get; set; }
 
     User user { get; set; } = new User();
 
     private List<User> friList { get; set; } = new List<User>();
+
+    private List<FriendRequest> friReqList { get; set; } = new List<FriendRequest>();
 
     /// <summary>
     /// DropDown
@@ -151,6 +155,8 @@
                 // Set the username
                 user.UserName = user?.UserName ?? "Unknown User";
 
+                friReqList = await FriReqRequest.GetFriendRequest(Uid);                
+                loginUser = await ls.GetItemAsync<int>("userId");
                 await GetFriendList(Uid);
                 await InvokeAsync(StateHasChanged);
             }
@@ -162,13 +168,44 @@
         }
 
     }
+
     async Task GetFriendList(int localUid)
     {
         friList = await FriListRequest.GetFriends(localUid);
     }
+
     private async void GoToNewFeed()
     {
         await JSRuntime.InvokeVoidAsync("navigateTo", "/");
+    }
+
+    // Accept Friend Request
+    private async Task AcceptFriendRequest(int friendRequestId)
+    {
+        await FriReqRequest.RespondFriendRequest(friendRequestId, true);
+
+        await GetFriendList(Uid);
+
+        friReqList = friReqList.Where(req => req.ID != friendRequestId).ToList();
+    }
+
+    // Decline Friend Request
+    private async Task DeclineFriendRequest(int friendRequestId)
+    {
+        await FriReqRequest.RespondFriendRequest(friendRequestId, false);
+
+        friReqList = friReqList.Where(req => req.ID != friendRequestId).ToList();
+    }
+
+    // Remove Friend 
+    private async Task RemoveFriend(int userID,int friendListId)
+    {
+        await FriListRequest.RemoveFriend(userID, friendListId);
+        await GetFriendList(Uid);
+
+        // Remove from the list
+        friList = friList.Where(flist => flist.ID != friendListId).ToList();
+
     }
 }
 

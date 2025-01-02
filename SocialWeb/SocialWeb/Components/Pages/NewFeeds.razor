@@ -201,7 +201,7 @@
     }
     async Task CheckAuthenticationStatus()
     {
-        var authStatus = await ls.GetItemAsync<int?>("ID"); // Assuming "ID" is nullable
+        var authStatus = await ls.GetItemAsync<int?>("userId"); // Assuming "ID" is nullable
         IsAuthenticated = authStatus.HasValue; // Check if the ID exists and is valid
     }
 }
