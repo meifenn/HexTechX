@@ -265,7 +265,7 @@ body {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-start;
-    gap: 10px; 
+    gap: 5px; 
 }
 
 .category-item {
@@ -521,15 +521,15 @@ body {
     border-radius: 3px;
 }
 
-.modal {
-    width: 1300px !important; /* Set width to 1000px */
-    height: 1200px !important; /* Set height to 1000px */
-    max-width: 1300px; /* Ensure responsiveness */
-    max-height: 100%; /* Prevent overflow */
-    margin: auto; /* Center the modal */
-    padding: 20px; /* Optional padding */
-    overflow: hidden; /* Add scrollbars if content overflows */
-}
+/*.modal {
+    width: 1300px !important;*/ /* Set width to 1000px */
+    /*height: 1200px !important;*/ /* Set height to 1000px */
+    /*max-width: 1300px;*/ /* Ensure responsiveness */
+    /*max-height: 100%;*/ /* Prevent overflow */
+    /*margin: auto;*/ /* Center the modal */
+    /*padding: 20px;*/ /* Optional padding */
+    /*overflow: hidden;*/ /* Add scrollbars if content overflows */
+/*}*/
 
 .modal-dialog {
     display: flex; /* Ensure modal content is properly aligned */
@@ -596,3 +596,26 @@ body {
     .comment-input input {
         flex-grow: 1;
     }
+
+.image-preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.image-preview {
+    border: 1px solid #ddd;
+    padding: 5px;
+    border-radius: 5px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+.full-height-modal {
+    height: 100vh; /* 100vh represents 100% of the viewport height */
+    max-height: 100vh; /* Prevent overflow if content is too large */
+    overflow-y: auto; /* Enable vertical scrolling within the modal */
+}
+
+.post-fixed-height {
+    height: calc(100vh - 150px); /* Subtract the header height from the viewport height */
+    overflow-y: auto;
+}

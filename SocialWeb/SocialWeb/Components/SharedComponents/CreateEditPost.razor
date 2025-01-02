@@ -1,48 +1,176 @@
-﻿<div class="modal-dialog" role="document" style="max-width:1000px; max-height:800px;">
-    <div class="modal-content fix-width-modal-content">
+﻿@using System.Text.Json
+<div class="modal-dialog full-height-modal" role="document" style="max-width: 1500px;">
+    <div class="modal-content full-height-modal">
         <div class="modal-header justify-content-between">
             <h5 class="modal-title">Post</h5>
             <div class="d-flex align-self-end">
-                <button class="btn btn-secondary" @onclick="@Close">Close</button>
+                <button type="button" class="btn btn-secondary" @onclick="@Close">Close</button>
             </div>
         </div>
-        <div class="modal-body modal-body-scrollable">
-            <div class="form-group" style="margin-bottom: 1rem;">
-                <input type="text" class="form-control" placeholder="Title..." style="border: 1px solid #ccc; border-radius: 8px; padding: 0.75rem;">
-            </div>
-            <div class="form-group" style="margin-bottom: 1rem;">
-                <textarea class="form-control" placeholder="Caption..." rows="4" style="border: 1px solid #ccc; border-radius: 8px; padding: 0.75rem;"></textarea>
-            </div>
-            <div class="form-group">
-                <input type="text" class="form-control" placeholder="Add hashtags by typing '#' ..." style="border: 1px solid #ccc; border-radius: 8px; padding: 0.75rem;">
-            </div>
-            @* <div class="container"> *@
-            @*     <input /> *@
+        <EditForm Model="post" OnValidSubmit="SubmitPost">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <div class="modal-body modal-body-scrollable">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <InputText @bind-Value=@post.Title class="form-control" placeholder="Title..." style="border: 1px solid #ccc; border-radius: 8px; padding: 0.75rem;" />
+                </div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <InputTextArea @bind-Value=@post.Description class="form-control"  placeholder="Caption..." rows="4" style="border: 1px solid #ccc; border-radius: 8px; padding: 0.75rem;"></InputTextArea>
+                </div>
+                <div class="form-group d-flex flex-row justify-content-between align-items-center">
+                    <div class="w-75">
+                        <InputText @bind-Value=@inputTag class="form-control" placeholder="Add hashtags by typing '#' ..." style="border: 1px solid #ccc; border-radius: 8px; padding: 0.75rem;" />
+                    </div>
+                    <button type="button" class="btn btn-secondary" @onclick="()=>AddTag(inputTag)">Add Tag</button>
+                </div>
 
-            @* </div> *@
-        </div>
-        <div class="modal-footer" style="border-top: none; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
-            <button class="btn btn-primary pb-5" style="background-color: #5b93f6; border: none; cursor: pointer; height:40px; ">
-                <i class="bi bi-image" style=" font-size: 1.5rem;"></i> Photo
-            </button>
-            <button class="btn btn-primary" style="background-color: #5b93f6; border: none; padding: 0.5rem 1rem; border-radius: 8px;" @onclick="SubmitPost">
-                <i class="bi bi-send"></i> Post
-            </button>
-        </div>
+                <div class="categories mt-1">
+                    @foreach(var item in tagList)
+                    {
+                        <span class="category-item bg-dark text-light" style="cursor: pointer;" @onclick="()=>RemoveTag(item)">@item</span>
+                    }
+                </div>
+                <div class="form-group mt-2">
+                    <InputFile onchange="HandleFilesSelected" id="PhotoUpload" multiple class="btn btn-primary pb-5" style="background-color: #5b93f6; border: none; cursor: pointer; height:40px; ">
+                        <i class="bi bi-image" style=" font-size: 1.5rem;"></i> Photo
+                    </InputFile>
+                    @if (previewImages.Any())
+                    {
+                        <h4>Previews</h4>
+                        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                            @foreach (var preview in previewImages)
+                            {
+                                <div>
+                                    <img src="@preview" class="" alt="Image Preview" style="max-width: 150px; max-height: 150px; border: 1px solid #ccc;" />
+                                </div>
+                            }
+                        </div>
+                        <button type="button" @onclick=RemoveAllPhotos class="mt-2 btn btn-outline-danger">
+                            Clear Photos
+                        </button>
+                    }
+                </div>
+
+            </div>
+            <div class="modal-footer justify-content-end" style="border-top: none; padding: 1rem; display: flex; align-items: center;">
+
+                <button type="submit" class="btn btn-primary @(btnDisabled == true ? "disabled" : "")"
+                disabled=@btnDisabled
+                style="border: none; padding: 0.5rem 1rem; border-radius: 8px;">
+                    <i class="bi bi-send"></i>
+                    @(btnDisabled ? "Posting": "Post")
+                </button>
+            </div>
+        </EditForm>
+
     </div>
 </div>
 
 @code {
+    @inject IJSRuntime JSRuntime;
+    @inject Blazored.LocalStorage.ILocalStorageService ls;
+    [Inject]
+    IPostApiRequest postRequest { get; set; }
+    [Inject]
+    IWebHostEnvironment env { get; set; }
     [Parameter]
     public EventCallback ModalClose { get; set; }
+    [Parameter]
+    public EventCallback UploadSuccess { get; set; }
+
+    Post post { get; set; } = new Post();
+
+    List<string> tagList { get; set; } = new();
+    List<IBrowserFile>? selectedFiles { get; set; } = new List<IBrowserFile>();
+    List<string> previewImages  { get; set; } = new();
+    List<string> imageNameList { get; set; } = new();
+    //string[] previewImages { get; set; } = [];
+    string? inputTag {get;set;}
+
+    bool btnDisabled { get; set; } = false;
 
     public async Task Close()
     {
         await ModalClose.InvokeAsync();
     }
-
-    private void SubmitPost()
+  
+    async Task SubmitPost()
     {
-        // Add post submission logic here
+        btnDisabled = true;
+        imageNameList = new List<string>();
+
+        if(previewImages.Any())
+        {
+            foreach(var img in previewImages)
+            {
+                imageNameList.Add(Guid.NewGuid().ToString("N")+".jpg");
+            }
+            post.PhotoDatas = string.Join(",", imageNameList);
+        }
+        if(tagList.Any())
+        {
+            post.Tags = string.Join(",", tagList);
+        }
+        post.UploadedById = await ls.GetItemAsync<int>("userId");
+        
+        //
+        var res = await postRequest.Insert(post);
+        if(res == "success")
+        {
+            //save photos to wwwroot/image
+            for(int i = 0; i < previewImages.Count(); i++)
+            {
+                var fileName = imageNameList[i];
+                var envPath = env.WebRootPath;
+                var filePath = Path.Combine(envPath, "image", fileName);
+                var base64Data = previewImages[i].Split(',')[1];
+
+                // Decode the base64 string and save the image
+                var imageBytes = Convert.FromBase64String(base64Data);
+                await File.WriteAllBytesAsync(filePath, imageBytes);
+            }
+            previewImages.Clear();
+            await UploadSuccess.InvokeAsync();
+        }
     }
+    void AddTag(string? tag = null)
+    {
+        if(!string.IsNullOrEmpty(tag))
+        {
+            var existing = tagList.Any(a => a == tag);
+            if(existing == true)
+            {
+                return;
+            }
+            inputTag = "";
+            tagList.Add(tag);
+            StateHasChanged();
+        }
+    }
+    void RemoveTag(string? tag)
+    {
+        tagList.Remove(tag);
+        StateHasChanged();
+    }
+    void RemoveAllPhotos()
+    {
+        previewImages.Clear();
+        StateHasChanged();
+    }
+    private async Task HandleFilesSelected(InputFileChangeEventArgs e)
+    {
+        previewImages.Clear(); // Clear existing previews
+        foreach (var file in e.GetMultipleFiles())
+        {
+            using var memoryStream = new MemoryStream();
+
+            await file.OpenReadStream().CopyToAsync(memoryStream);
+            var imageBytes = memoryStream.ToArray();
+            var base64String = Convert.ToBase64String(imageBytes.AsSpan());
+            var imageUrl = $"data:image/{file.ContentType};base64,{base64String}";
+            previewImages.Add(imageUrl);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+   
 }

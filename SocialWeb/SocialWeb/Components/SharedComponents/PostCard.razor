@@ -30,7 +30,8 @@
                         var photoList = PostData?.PhotoDatas.Split(",").ToList();
                         foreach(var photo in photoList)
                         {
-                            <img src="https://via.placeholder.com/100" class="img-thumbnail me-2" alt="Image 1" />
+                            var photoPath = $@"/image/{photo}";
+                            <img src=@photoPath class="img-thumbnail me-2" alt="Image 1" />
                         }
                     }
 

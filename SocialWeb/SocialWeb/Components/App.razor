@@ -28,45 +28,157 @@
          function ShowModal(ModalName) {
             try {
 
-                //$("#PopUpModal_" + ModalName).modal('show');
-                let modal = new bootstrap.Modal(document.getElementById("PopUpModal_" + ModalName));
+                let modalElement = document.getElementById("PopUpModal_" + ModalName);
+                if (!modalElement) {
+                    return;
+                }
+                let modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
                 modal.show();
             }
             catch (error) {
 
             }
         }
-        function CloseModal(ModalName) {
+        function CloseModal() {
             try {
-                let modalElement = document.getElementById("PopUpModal_" + ModalName);
-                if (!modalElement) {
-                    console.error("Modal not found:", "PopUpModal_" + ModalName);
+                let modalElements = document.querySelectorAll('[id*="PopUpModal"]');
+                if (modalElements.length === 0) {
                     return;
                 }
-                let modal = bootstrap.Modal.getInstance(modalElement);
-                if (modal) {
-                    modal.hide();
-                } else {
-                    console.error("Modal instance not found:", modalElement);
-                }
+
+                modalElements.forEach((modalElement) => {
+                    let modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) {
+                        modal.hide();
+                    } else {
+                        console.warn("Modal instance not found or not open:", modalElement.id);
+                    }
+                });
             } catch (error) {
-                console.error("Error closing modal:", error);
+                console.error("Error closing modals:", error);
             }
         }
+
+        let isScrolling = false;
+
+        
         function registerScrollEvent(dotNetObject) {
-            const container = document.getElementById("scroll-container");
+            try{
+                const container = document.getElementById("scroll-container");
 
-            if (!container) {
-                console.error("Scroll container not found.");
-                return;
-            }
-            container.addEventListener("scroll", () => {
-                if (container.scrollTop + container.clientHeight >= container.scrollHeight - 10) {
-                    dotNetObject.invokeMethodAsync("OnScrollReachedBottom");
+                if (!container) {
+                    console.error("Scroll container not found.");
+                    return;
                 }
-            });
+
+                container.addEventListener("scroll", () => {
+                    if (container.scrollTop + container.clientHeight >= container.scrollHeight - 10) {
+                        if (!isScrolling) {
+                            isScrolling = true;
+                            dotNetObject.invokeMethodAsync("OnScrollReachedBottom")
+                                .then(() => {
+                                    setTimeout(() => {
+                                        isScrolling = false;
+                                    }, 200);
+                                })
+                                .catch(err => {
+                                    console.error("Error invoking method:", err);
+                                    isScrolling = false;
+                                });
+                        }
+                    }
+                });
+            }catch(error)
+            {
+
+            }
+            
+        }
+        function deactivateScrollEvent() {
+            try{
+                const container = document.getElementById("scroll-container");
+
+                if (container && scrollEventHandler) {
+                    container.removeEventListener("scroll", scrollEventHandler);
+                    console.log("Scroll event listener deactivated.");
+                }
+            }catch(error)
+            {
+
+            }
+           
         }
 
+        var totalfiles = [];
+        function GetFileData(id) {
+            totalfiles = [];
+            let target = document.getElementById(id);
+            let filesArray = Array.prototype.slice.call(target.files);
+            return Promise.all(filesArray.map(fileToDataURL));
+        }
+
+        async function fileToDataURL(file) {
+            var reader = new FileReader();
+            return new Promise(function (resolve, reject) {
+                reader.onerror = function () {
+                    reader.abort();
+                    reject(new DOMException('Error occurred reading file ' + file));
+                };
+                reader.onload = function (event) {
+                    var img = document.createElement("img");
+                    img.src = event.target.result;
+                    var mine_type = "image/jpeg";
+                    img.onload = function () {
+                        var canvas = document.createElement("canvas");
+                        var ctx = canvas.getContext("2d");
+
+                        var calsize = calculateSize(img, 1980, 1080);
+
+                        var width = calsize[0];
+                        var height = calsize[1];
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        var dataurl = canvas.toDataURL(mine_type, 60 / 100);
+                        let photoobj = {
+                            "FileName": file.name,
+                            "FileExtension": ".jpeg",
+                            "FileData": dataurl
+                        }
+
+                        totalfiles.push(photoobj);
+
+                        resolve(JSON.stringify(totalfiles));
+                    }
+
+                    // console.log(dataurl)
+                    //resolve(dataurl);
+                    // resolve(reader.result);
+                    console.log('resolved');
+                };
+                reader.readAsDataURL(file);
+                console.log('returned');
+            })
+        }
+        function calculateSize(img, maxWidth, maxHeight) {
+        let width = img.width;
+        let height = img.height;
+
+        // calculate the width and height, constraining the proportions
+        if (width > height) {
+            if (width > maxWidth) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+            }
+        } else {
+            if (height > maxHeight) {
+                width = Math.round((width * maxHeight) / height);
+                height = maxHeight;
+            }
+        }
+        return [width, height];
+        }
     </script>
 </body>
 

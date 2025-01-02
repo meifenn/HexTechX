@@ -1,6 +1,6 @@
-﻿@if (ShowModal)
+﻿@if(ShowModal)
 {
-    <div class="modal fade" id="PopUpModal_@ModalTitle" tabindex="-1" role="dialog" data-mdb-backdrop="static" data-bs-backdrop="static" data-backdrop="static">
+    <div class="modal" id="PopUpModal_@ModalTitle" tabindex="-1" role="dialog" data-mdb-backdrop="static" data-bs-backdrop="static" data-backdrop="static">
         @ChildContent
     </div>
 }
@@ -20,6 +20,7 @@
     public async void Show()
     {
         ShowModal = true;
+        StateHasChanged();
         await _js.InvokeVoidAsync("ShowModal", ModalTitle);
         await InvokeAsync(StateHasChanged);
 
@@ -28,7 +29,7 @@
     public async void Close()
     {
         ShowModal = false;
-        await _js.InvokeVoidAsync("CloseModal", ModalTitle);
+        await _js.InvokeVoidAsync("CloseModal");
         await InvokeAsync(StateHasChanged);
     }
 }

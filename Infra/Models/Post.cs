@@ -25,9 +25,6 @@ namespace Infra.Models
         public int? UploadedById { get; set; }  
         public string? UploadedUserName { get; set; }
         public string? UploadedUserPhoto { get; set; }
-        [NotMapped]
-        public string? UploadedUserPhotoUrl { get; set; }
-       
-        
+      
     }
 }

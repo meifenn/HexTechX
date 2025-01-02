@@ -34,7 +34,7 @@ namespace Infra.Helpers.ApiRequestHelper.PostApiRequest
 
         public async Task<Paging<Post>> GetPaging(int page = 1, int pageSize = 10, string? searchString = null, int? userId = null, string? tag = null)
         {
-            string url = $@"{ApiUrl.Url}api/posts/get?page={1}&pageSize={pageSize}&searchString={searchString}&userId={userId}&tag={tag}";
+            string url = $@"{ApiUrl.Url}api/posts/get?page={page}&pageSize={pageSize}&searchString={searchString}&userId={userId}&tag={tag}";
             var model = await _apiRequest.GetAsync<Paging<Post>>(url);
             return model;
         }
@@ -43,14 +43,14 @@ namespace Infra.Helpers.ApiRequestHelper.PostApiRequest
         {
             string url = $@"{ApiUrl.Url}api/posts/insert";
             var model = await _apiRequest.PostAsync<Post, string>(url, post);
-            throw new NotImplementedException();
+            return model;
         }
 
         public async Task<string> Update(Post post)
         {
             string url = $@"{ApiUrl.Url}api/posts/update";
             var model = await _apiRequest.PostAsync<Post, string>(url, post);
-            throw new NotImplementedException();
+            return model;
         }
     }
 }

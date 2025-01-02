@@ -61,11 +61,13 @@
 
         <div class="col-md-9 mt-5">
             <div class="mb-4">
-                <input type="text" class="form-control" @onclick="()=>ShowCreatePostModal(1)" placeholder="Post something new..." />
+                <button type="button" class="btn btn-primary" @onclick=ShowCreatePostModal>
+                    Post something new...
+                </button>
             </div>
             @if(postList.Count() > 0)
             {
-                <div class="d-flex flex-column" id="scroll-container" style="overflow-y: auto;">
+                <div class="d-flex flex-column post-fixed-height" id="scroll-container">
                     @foreach (var post in postList)
                     {
                         <PostCard PostData="post"></PostCard>
@@ -100,8 +102,11 @@
 
 
 <PopUpModal @ref="popUp" CloseCallBack="CloseCreatePostHandler" ModalTitle="CreateEditPost">
-    <CreateEditPost @ref="createPopUp" ModalClose="CloseCreatePostHandler"></CreateEditPost>
+    <CreateEditPost @ref="createPopUp" 
+    ModalClose="CloseCreatePostHandler" 
+    UploadSuccess="UploadSuccessHandler"></CreateEditPost>
 </PopUpModal>
+
 
 @code {
     [Inject]
@@ -115,11 +120,13 @@
     Paging<Post> posts { get; set; } = new Paging<Post>();
     List<Post> postList { get; set; } = new List<Post>();
 
+    int totalPages { get; set; }
     int page = 1;
-    int pageSize = 10;
+    int pageSize = 3;
     string? search { get; set; }
     string? selctag { get; set; }
     Post detailPost { get; set; } = new Post();
+    
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -143,7 +150,9 @@
     {
         search = searchStr;
         selctag = selectedTag;
+        StateHasChanged();
         posts = await postRequest.GetPaging(page, pageSize, search, null, selctag);
+        totalPages = posts.TotalPages ?? 0;
         if(posts.Results != null && posts.Results.Count() > 0)
         {
             postList.AddRange(posts.Results);
@@ -153,9 +162,13 @@
     [JSInvokable]
     public async Task OnScrollReachedBottom()
     {
-        page = page + 1;
-        await GetPosts();
-
+        if((page + 1) > totalPages)
+        {
+            return;
+        }else{
+            page = page + 1;
+            await GetPosts();
+        }
     }
 
     async Task Search(string? search)
@@ -176,13 +189,21 @@
         postList = new List<Post>();
         await GetPosts(search, tag);
     }
-    void ShowCreatePostModal(int Id)
+    void ShowCreatePostModal()
     {
         popUp.Show();
     }
     void CloseCreatePostHandler()
     {
         popUp.Close();
+    }
+    async Task UploadSuccessHandler()
+    {
+        popUp.Close();
+        page = 1;
+        postList = new List<Post>();
+        await GetTags();
+        await GetPosts();
     }
    
 }
