@@ -99,7 +99,7 @@
             <div class="mb-4 p-3 shadow-sm rounded profile-info">
                 <p><strong>Name: @(user?.User?.UserName ?? "Unknown User")</strong></p>
                 <p><strong>Joined Since: @user?.User?.CreatedTime?.ToString("dd-MMM-yyyy hh:mm tt")</strong> </p>
-                <p><strong>Total Posts: 1 </strong> | <strong>Total Likes: 5</strong> </p>
+                <p><strong>Total Posts: @(user?.TotalPosts ?? 0) </strong> | <strong>Total Likes Received: @(user?.TotalLikesReceived ?? 0)</strong> | <strong>Total Comments Received: @(user?.TotalCommentsReceived ?? 0)</strong> </p>
 
                 <div class="button-container d-flex">
                     @if(isOwnProfile)
@@ -109,22 +109,22 @@
                     </button> *@
                     }else if(user?.FriendshipStatus == "Not Friends")
                     {
-                        <button type="button" class="btn btn-outline-primary w-50" @onclick=SendFriendRequest>+ Add Friend</button>
+                        <button type="button" class="btn btn-outline-primary" @onclick=SendFriendRequest>+ Add Friend</button>
                     }
                     else if (user?.FriendshipStatus == "Incoming Friend Request")
                     {
-                        <div class="fs-14">This user has friend request sent to you. </div>
-                        <button type="button" class="btn btn-outline-primary" @onclick="()=>AcceptFriendRequest(user.FriendRequestId ?? 0)">Accept</button>
+                        <div class="fs-14 me-2">This user has friend request sent to you. </div>
+                        <button type="button" class="btn btn-outline-primary me-2" @onclick="()=>AcceptFriendRequest(user.FriendRequestId ?? 0)">Accept</button>
                         <button type="button" class="btn btn-outline-danger" @onclick="()=>DeclineFriendRequest(user.FriendRequestId ?? 0)">Reject</button>
                     }
                     else if (user?.FriendshipStatus == "Friend Requested")
                     {
-                        <div class="fs-14">Friend requested to this user. </div>
-                        <button type="button" class="btn btn-outline-primary w-50" @onclick=CancelFriendRequest>Cancel friend request</button>
+                        <div class="fs-14 me-2">Friend requested to this user. </div>
+                        <button type="button" class="btn btn-outline-primary" @onclick=CancelFriendRequest>Cancel friend request</button>
                     }
                     else if (user?.FriendshipStatus == "Friends")
                     {
-                        <button type="button" class="btn btn-outline-primary w-50" @onclick="()=>RemoveFriend(loginUserId,userId)">Unfriend</button>
+                        <button type="button" class="btn btn-outline-primary" @onclick="()=>RemoveFriend(loginUserId,userId)">Unfriend</button>
                     }
 
                 </div>
@@ -231,7 +231,7 @@
     private async Task DeclineFriendRequest(int friendRequestId)
     {
         var res = await FriReqRequest.RespondFriendRequest(friendRequestId, false);
-        if(res == "success")
+        if (res == "friend request removed")
         {
             friReqList = friReqList.Where(req => req.ID != friendRequestId).ToList();
             if (!isOwnProfile)
@@ -247,9 +247,14 @@
     private async Task RemoveFriend(int userID,int friendListId)
     {
         var res = await FriListRequest.RemoveFriend(userID, friendListId);
+
         //await GetFriendList(userId);
         // Remove from the list
         friList = friList.Where(flist => flist.ID != friendListId).ToList();
+        if (!isOwnProfile)
+        {
+            user.FriendshipStatus = "Not Friends";
+        }
         StateHasChanged();
     }
 
@@ -277,7 +282,7 @@
         }
 
         var res = await FriReqRequest.RespondFriendRequest(req.ID, false);
-        if (res == "success")
+        if (res == "friend request removed")
         {
             user.FriendshipStatus = "Not Friends";
             StateHasChanged();

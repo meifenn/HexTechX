@@ -290,8 +290,6 @@ body {
 .profile-icon {
     display: flex;
     align-items: center;
-    font-size: 20px;
-    padding-top: 30px;
     margin-bottom: 15px;
     color: #333;
 }

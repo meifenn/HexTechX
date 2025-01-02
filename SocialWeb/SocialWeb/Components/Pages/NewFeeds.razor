@@ -53,21 +53,21 @@
             </div>
             @if(IsAuthenticated)
             {
-                <div class="profile-icon">
+                <div class="profile-icon mt-3" @onclick="GoToProfile" style="cursor: pointer;">
                     <img src="image/profileIcon.jpg" alt="Profile Icon" class="profile-img" />
-                    <span class="btn" @onclick="GoToProfile">Profile</span>
+                    <span class="fs-16" >Profile</span>
                 </div>
-                <div>
+                <div class="profile-icon mt-3" @onclick="Logout" style="cursor: pointer;">
                     <img src="image/logout-logo.png" alt="Profile Icon" class="profile-img" />
-                    <span class="btn" @onclick="Logout">LogOut</span>
+                    <span class="fs-16">LogOut</span>
                 </div>
             }
             else
             {
                 <br />
-                <div class="login-icon">
+                <div class="login-icon mt-2" @onclick="GoToLogin" style="cursor: pointer;">
                     <img src="image/profileIcon.jpg" alt="Profile Icon" class="profile-img" />
-                    <span class="btn" @onclick="GoToLogin">Login</span>
+                    <span class="fs-16" >Login</span>
                 </div>
             }
 

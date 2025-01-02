@@ -89,7 +89,7 @@ namespace SocialAPI.Services.Users
 
             //check friend requested or not
             var friendRequest = await _context.FriendRequests
-                .FirstOrDefaultAsync(a => a.FromUserID == loggedInUserId && a.ToUserID == viewingUserId);
+                .FirstOrDefaultAsync(a => a.FromUserID == loggedInUserId && a.ToUserID == viewingUserId && a.IsAccepted != true);
             if(friendRequest != null)
             {
                 profile.FriendRequestId = friendRequest.ID;
@@ -99,7 +99,7 @@ namespace SocialAPI.Services.Users
 
             //check incoming friend request
             var incomingFriendRequest = await _context.FriendRequests
-                .FirstOrDefaultAsync(a => a.ToUserID == viewingUserId && a.FromUserID == loggedInUserId);
+                .FirstOrDefaultAsync(a => a.FromUserID == viewingUserId && a.ToUserID == loggedInUserId && a.IsAccepted != true);
             if(incomingFriendRequest != null)
             {
                 profile.FriendRequestId = incomingFriendRequest.ID;
@@ -140,7 +140,7 @@ namespace SocialAPI.Services.Users
         }
         async Task<(int, int, int)> GetPostLikeCommentCounts(int userId)
         {
-            var posts = _context.Posts.AsNoTracking();
+            var posts = _context.Posts.Where(a => a.UploadedById == userId);
             int postCount = await posts.CountAsync();
             int likeCount = await posts.SumAsync(a => a.LikeCount) ?? 0;
             int commentCount = await posts.SumAsync(a => a.CommentCount) ?? 0;

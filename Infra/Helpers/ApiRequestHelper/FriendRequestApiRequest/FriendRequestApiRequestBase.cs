@@ -42,9 +42,11 @@ namespace Infra.Helpers.ApiRequestHelper.FriendRequestApiRequest
             return model;
         }
 
-        public Task<string> SendFriendRequest(FriendRequest req)
+        public async Task<string> SendFriendRequest(FriendRequest req)
         {
-            throw new NotImplementedException();
+            string url = $@"{ApiUrl.Url}api/friendrequests/send";
+            var model = await _apiRequest.PostAsync<FriendRequest, string>(url, req);
+            return model;
         }
     }
 }
