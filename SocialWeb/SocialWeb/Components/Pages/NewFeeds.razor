@@ -1,5 +1,6 @@
 ﻿@page "/"
 @inject IJSRuntime JSRuntime
+@inject Blazored.LocalStorage.ILocalStorageService ls;
 @using SocialWeb.Components
 @using System.Collections.Generic
 @using Infra.Helpers.ApiRequestHelper.PostApiRequest
@@ -50,10 +51,21 @@
                     <span class="category-item">#Shopping</span> *@
                 </div>
             </div>
-            <div class="profile-icon">
-                <img src="image/profileIcon.jpg" alt="Profile Icon" class="profile-img" />
-                <span class="btn" @onclick="GoToProfile">Profile</span>
-            </div>
+            @if(IsAuthenticated)
+            {
+                <div class="profile-icon">
+                    <img src="image/profileIcon.jpg" alt="Profile Icon" class="profile-img" />
+                    <span class="btn" @onclick="GoToProfile">Profile</span>
+                </div>
+            }
+            else if(!IsAuthenticated)
+            {
+                <br />
+                <div class="login-icon">
+                    <img src="image/profileIcon.jpg" alt="Profile Icon" class="profile-img" />
+                    <span class="btn" @onclick="GoToLogin">Login</span>
+                </div>
+            }
 
         </div>
 
@@ -109,6 +121,7 @@
     [Inject]
     IPostApiRequest postRequest { get; set; }
 
+    bool IsAuthenticated { get; set; } = false;
     PopUpModal popUp { get; set; }
     CreateEditPost createPopUp { get; set; } = new CreateEditPost();
     List<Tag> tagList { get; set; } = new List<Tag>();
@@ -125,6 +138,7 @@
     {
         if(firstRender)
         {
+            await CheckAuthenticationStatus();
             await GetTags();
             await GetPosts();
             await JSRuntime.InvokeVoidAsync("registerScrollEvent", DotNetObjectReference.Create(this));
@@ -132,6 +146,7 @@
         }
     }
 
+    private async void GoToLogin() => await JSRuntime.InvokeVoidAsync("navigateTo", "/Login");
     private async void GoToProfile() => await JSRuntime.InvokeVoidAsync("navigateTo", "/profile");
 
     async Task GetTags()
@@ -184,5 +199,9 @@
     {
         popUp.Close();
     }
-   
+    async Task CheckAuthenticationStatus()
+    {
+        var authStatus = await ls.GetItemAsync<int?>("ID"); // Assuming "ID" is nullable
+        IsAuthenticated = authStatus.HasValue; // Check if the ID exists and is valid
+    }
 }
