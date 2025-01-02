@@ -57,6 +57,10 @@
                     <img src="image/profileIcon.jpg" alt="Profile Icon" class="profile-img" />
                     <span class="btn" @onclick="GoToProfile">Profile</span>
                 </div>
+                <div>
+                    <img src="image/logout-logo.png" alt="Profile Icon" class="profile-img" />
+                    <span class="btn" @onclick="Logout">LogOut</span>
+                </div>
             }
             else if(!IsAuthenticated)
             {
@@ -198,6 +202,12 @@
     void CloseCreatePostHandler()
     {
         popUp.Close();
+    }
+    async Task Logout()
+    {
+        await ls.RemoveItemAsync("userId");
+        await ls.RemoveItemAsync("userName");
+        await JSRuntime.InvokeVoidAsync("navigateTo", "/");
     }
     async Task CheckAuthenticationStatus()
     {

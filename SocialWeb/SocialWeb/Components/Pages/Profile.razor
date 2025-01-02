@@ -150,14 +150,15 @@
         {
             try
             {
+
+                loginUser = await ls.GetItemAsync<int>("userId");
                 // Fetch user information by ID
-                user = await userRequest.GetByID(Uid);
+                user = await userRequest.GetByID(loginUser);
                 // Set the username
                 user.UserName = user?.UserName ?? "Unknown User";
 
-                friReqList = await FriReqRequest.GetFriendRequest(Uid);                
-                loginUser = await ls.GetItemAsync<int>("userId");
-                await GetFriendList(Uid);
+                friReqList = await FriReqRequest.GetFriendRequest(loginUser);
+                await GetFriendList(loginUser);
                 await InvokeAsync(StateHasChanged);
             }
             catch (Exception ex)
