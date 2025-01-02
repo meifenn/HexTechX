@@ -15,6 +15,14 @@ namespace Infra.Helpers.ApiRequestHelper.FriendRequestApiRequest
         {
             _apiRequest = apiRequest;
         }
+
+        public async Task<FriendRequest> GetByIds(int fromUserId, int toUserId)
+        {
+            string url = $@"{ApiUrl.Url}api/friendrequests/getbyids?fromUserId={fromUserId}&toUserId={toUserId}";
+            var model = await _apiRequest.GetAsync<FriendRequest>(url);
+            return model;
+        }
+
         public async Task<List<FriendRequest>> GetFriendRequest(int userId)
         {
             string url = $@"{ApiUrl.Url}api/friendrequests/get?userId={userId}";

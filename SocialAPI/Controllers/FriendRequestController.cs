@@ -26,6 +26,12 @@ namespace SocialAPI.Controllers
             var res = await _iFriendRequest.GetFriendRequest(userId);
             return Ok(res);
         }
+        [HttpGet("getbyids")]
+        public async Task<IActionResult> GetByIds(int fromUserId, int toUserId)
+        {
+            var res = await _iFriendRequest.GetByIds(fromUserId, toUserId);
+            return Ok(res);
+        }
         [HttpPost("respond")]
         public async Task<IActionResult> RespondFriendRequest(FriendRequestResponseViewModel response)
         {

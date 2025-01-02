@@ -1,5 +1,6 @@
 ﻿using Infra.Helpers.Paging;
 using Infra.Models;
+using Infra.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +16,7 @@ namespace Infra.Helpers.ApiRequestHelper.UserApiRequest
         Task<string> Update(User user);
         Task<string> Delete(int id);
         Task<User> GetByID(int id);
+        Task<UserProfile> GetProfile(int loggedInUserId, int viewingUserId);
         Task<string> Authenticate(string username, string password);
     }
 }

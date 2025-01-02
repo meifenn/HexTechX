@@ -93,6 +93,11 @@ namespace SocialAPI.Services.FriendRequests
             return res == 1 ? "friend request removed" : "fail";
         }
 
-    
+        public async Task<FriendRequest> GetByIds(int fromUserId, int toUserId)
+        {
+            var request = await _context.FriendRequests
+                .FirstOrDefaultAsync(a => a.FromUserID == fromUserId && a.ToUserID == toUserId);
+            return request ?? new FriendRequest();
+        }
     }
 }

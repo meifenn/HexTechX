@@ -62,7 +62,7 @@
                     <span class="btn" @onclick="Logout">LogOut</span>
                 </div>
             }
-            else if(!IsAuthenticated)
+            else
             {
                 <br />
                 <div class="login-icon">
@@ -81,15 +81,19 @@
                     Post something new...
                 </button>
             </div>
-            @if(postList.Count() > 0)
+         
+            <div class="d-flex flex-column post-fixed-height" id="scroll-container">
+            @if (postList.Count() > 0)
             {
-                <div class="d-flex flex-column post-fixed-height" id="scroll-container">
-                    @foreach (var post in postList)
-                    {
-                        <PostCard PostData="post"></PostCard>
-                    }
-                </div>
+                @foreach (var post in postList)
+                {
+                    <PostCard PostData="post"></PostCard>
+                }
+            }else{
+                <div class="fs-16 w-100 justify-content-center align-items-center">No Posts Yet...</div>
             }
+            </div>
+            
 
             @*    <div class="card mb-3" @onclick="()=>ShowPostDetailModal(1)">
                 <div class="card-header align-items-center">
@@ -140,6 +144,7 @@
     int totalPages { get; set; }
     int page = 1;
     int pageSize = 3;
+    int? UserId { get; set; }
     string? search { get; set; }
     string? selctag { get; set; }
     Post detailPost { get; set; } = new Post();
@@ -158,7 +163,7 @@
     }
 
     private async void GoToLogin() => await JSRuntime.InvokeVoidAsync("navigateTo", "/Login");
-    private async void GoToProfile() => await JSRuntime.InvokeVoidAsync("navigateTo", "/profile");
+    private async void GoToProfile() => await JSRuntime.InvokeVoidAsync("navigateTo", $@"/profile/{UserId}");
 
     async Task GetTags()
     {
@@ -186,7 +191,7 @@
             return;
         }else{
             page = page + 1;
-            await GetPosts();
+            await GetPosts(search, selctag);
         }
     }
 
@@ -232,7 +237,7 @@
     }
     async Task CheckAuthenticationStatus()
     {
-        var authStatus = await ls.GetItemAsync<int?>("userId"); // Assuming "ID" is nullable
-        IsAuthenticated = authStatus.HasValue; // Check if the ID exists and is valid
+        UserId = await ls.GetItemAsync<int?>("userId"); // Assuming "ID" is nullable
+        IsAuthenticated = UserId.HasValue; // Check if the ID exists and is valid
     }
 }

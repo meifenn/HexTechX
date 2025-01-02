@@ -50,6 +50,13 @@ namespace Infra.Helpers.ApiRequestHelper.UserApiRequest
             return model;
         }
 
+        public async Task<UserProfile> GetProfile(int loggedInUserId, int viewingUserId)
+        {
+            string url = $@"{ApiUrl.Url}api/users/profile?loggedInUserId={loggedInUserId}&viewingUserId={viewingUserId}";
+            var model = await _apiRequest.GetAsync<UserProfile>(url);
+            return model;
+        }
+
         public async Task<string> Insert(User user)
         {
             string url = $@"{ApiUrl.Url}api/users/insert";

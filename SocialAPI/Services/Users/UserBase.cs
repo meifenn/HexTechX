@@ -1,5 +1,6 @@
 ﻿using Infra.Helpers.Paging;
 using Infra.Models;
+using Infra.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace SocialAPI.Services.Users
@@ -62,6 +63,54 @@ namespace SocialAPI.Services.Users
             return data;
         }
 
+        public async Task<UserProfile> GetProfile(int loggedInUserId, int viewingUserId)
+        {
+            var user = await GetByID(viewingUserId);
+            if (user == null)
+            {
+                return new UserProfile { AdditionalMessage = "user does not exist"};
+            }
+
+            UserProfile profile = new UserProfile();
+            profile.User = user;
+            (profile.TotalPosts, profile.TotalLikesReceived, profile.TotalCommentsReceived) = await GetPostLikeCommentCounts(viewingUserId);
+
+            if(loggedInUserId == viewingUserId) //own profile
+            {
+                return profile;
+            }
+            //check friendship
+            var friend = await _context.Friends.AnyAsync(a => a.UserID == loggedInUserId && a.FriendID == viewingUserId);
+            if(friend)
+            {
+                profile.FriendshipStatus = "Friends";
+                return profile;
+            }
+
+            //check friend requested or not
+            var friendRequest = await _context.FriendRequests
+                .FirstOrDefaultAsync(a => a.FromUserID == loggedInUserId && a.ToUserID == viewingUserId);
+            if(friendRequest != null)
+            {
+                profile.FriendRequestId = friendRequest.ID;
+                profile.FriendshipStatus = "Friend Requested";
+                return profile;
+            }
+
+            //check incoming friend request
+            var incomingFriendRequest = await _context.FriendRequests
+                .FirstOrDefaultAsync(a => a.ToUserID == viewingUserId && a.FromUserID == loggedInUserId);
+            if(incomingFriendRequest != null)
+            {
+                profile.FriendRequestId = incomingFriendRequest.ID;
+                profile.FriendshipStatus = "Incoming Friend Request";
+                return profile;
+            }
+
+            profile.FriendshipStatus = "Not Friends";
+            return profile;
+        }
+
         public async Task<string> Insert(User user)
         {
             var usernameCheck = await GetByName(user.UserName);
@@ -88,6 +137,14 @@ namespace SocialAPI.Services.Users
             await _context.Users.AddAsync(user);
             var res = await _context.SaveChangesAsync();
             return res == 1 ? "success" : "fail";
+        }
+        async Task<(int, int, int)> GetPostLikeCommentCounts(int userId)
+        {
+            var posts = _context.Posts.AsNoTracking();
+            int postCount = await posts.CountAsync();
+            int likeCount = await posts.SumAsync(a => a.LikeCount) ?? 0;
+            int commentCount = await posts.SumAsync(a => a.CommentCount) ?? 0;
+            return (postCount, likeCount, commentCount);
         }
     }
 }

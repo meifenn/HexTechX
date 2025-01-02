@@ -70,8 +70,12 @@
                     console.error("Scroll container not found.");
                     return;
                 }
-
+          
                 container.addEventListener("scroll", () => {
+                    // console.log("container scrollTop: "+container.scrollTop);
+                    // console.log("container clientHeight: "+container.clientHeight);
+                    // console.log("container scrollHeight-10: "+ (container.scrollHeight - 10));
+                    // console.log("container scrollTop + clientHeight: "+ (container.scrollTop+container.clientHeight));
                     if (container.scrollTop + container.clientHeight >= container.scrollHeight - 10) {
                         if (!isScrolling) {
                             isScrolling = true;

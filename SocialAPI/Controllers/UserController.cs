@@ -28,6 +28,12 @@ namespace SocialAPI.Controllers
             var res = await _iUser.GetByID(id);
             return Ok(res);
         }
+        [HttpGet("profile")]
+        public async Task<IActionResult> GetProfile(int loggedInUserId, int viewingUserId)
+        {
+            var res = await _iUser.GetProfile(loggedInUserId, viewingUserId);
+            return Ok(res);
+        }
         [HttpGet("getbyname")]
         public async Task<IActionResult> GetByName(string? name = "")
         {
