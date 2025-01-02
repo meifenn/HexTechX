@@ -1,8 +1,11 @@
-﻿@page "/profile/{Uid:int}"
-@page "/profile"
+﻿@page "/profile"
+@inject Blazored.LocalStorage.ILocalStorageService ls;
+@* @page "/profile/{Uid:int}" *@
+
 
 @inject IJSRuntime JSRuntime
 @using Infra.Helpers.ApiRequestHelper.UserApiRequest
+@using Infra.Helpers.ApiRequestHelper.FriendApiRequest
 @using Infra.Models
 
 <PageTitle>HexTechX/ Profile</PageTitle>
@@ -26,51 +29,58 @@
 
             <div class="dropdown pe-2">
                 <button @onclick="ToggleFriendList" class="friend-list-button">
-                    Friend Lists (4)
+                    Friend Lists (@friList.Count())
                 </button>
 
                 @if (isDropdownVisibleFriList)
                 {
-                    <div class="friend-list-dropdown">
-                        @foreach (var friend in Friends)
-                        {
-                            <div class="friend-name d-flex justify-content-between align-items-center">
-                                <div class="me-auto">
-                                    @friend
+                    @if (friList != null && friList.Count() > 0)
+                    {
+                        <div class="friend-list-dropdown">
+                            @foreach (var friend in friList)
+                            {
+                                <div class="friend-name d-flex justify-content-between align-items-center">
+                                    <div class="me-auto">
+                                        @friend.UserName
+                                    </div>
+                                    <div>
+                                        <i class="fa-solid fa-trash text-danger" style="cursor: pointer;" @onclick="()=> RemoveFriend(loginUser,friend.ID)"></i>
+                                    </div>
                                 </div>
-                                <div>
-                                    <i class="fa-solid fa-trash text-danger" style="cursor: pointer;"></i>
-                                </div>
-                            </div>
-                        }
-                    </div>
+                            }
+                        </div>
+                    }
                 }
             </div>
 
-            <!-- Friend List Dropdown -->
+            <!-- Friend Request List Dropdown -->
             <div class="dropdown mt-2 pe-2">
                 <button @onclick="ToggleFriendRequest" class="friend-list-button">
-                    Friend Requests (4)
+                    Friend Requests (@friReqList.Count())
                 </button>
 
                 @if (isDropdownVisibleFriReq)
                 {
-                    <div class="friend-list-dropdown">
-                        @foreach (var friend in Friends)
-                        {
-                            <div class="friend-name d-flex justify-content-between align-items-center">
-                                <div class="me-auto">
-                                    @friend
-                                </div>
-                                <div>
-                                    <i class="fa-solid fa-check text-success" style="cursor: pointer;"></i>
+                    @if (friReqList != null && friReqList.Count() > 0)
+                    {
+                        <div class="friend-list-dropdown">
+                            @foreach (var friendReq in friReqList)
+                            {
+                                <div class="friend-name d-flex justify-content-between align-items-center">
+                                    <div class="me-auto">
+                                        @friendReq.FromUserName
+                                    </div>
+                                    <div>
+                                        <i class="fa-solid fa-check text-success" style="cursor: pointer;" @onclick="()=> AcceptFriendRequest(friendReq.ID)"></i>
 
-                                    <!-- Red Cross Icon -->
-                                    <i class="fa-solid fa-xmark text-danger" style="cursor: pointer;"></i>
+                                        <!-- Red Cross Icon -->
+                                        <i class="fa-solid fa-xmark text-danger" style="cursor: pointer;" @onclick="()=> DeclineFriendRequest(friendReq.ID)"></i>
+                                    </div>
                                 </div>
-                            </div>
-                        }
-                    </div>
+                            }
+
+                        </div>
+                    }
                 }
             </div>
         </aside>
@@ -100,17 +110,24 @@
 </div>
 
 @code {
-    [Parameter]
-    public int Uid { get; set; } = 1;
-
 
     [Inject]
     IUserApiRequest userRequest { get; set; }
+    [Inject]
+    IFriendApiRequest FriListRequest { get; set; }
+    [Inject]
+    IFriendRequestApiRequest FriReqRequest { get; set; }
 
-    private List<string> Friends = new List<string> { "John Doe", "Jane Smith", "Michael Johnson", "Emily Davis" };
-    private List<User> UserInfo { get; set; } = new List<User>();
+    [Parameter]
+    public int Uid { get; set; } = 1;
+    public int loginUser { get; set; }
 
     User user { get; set; } = new User();
+
+    private List<User> friList { get; set; } = new List<User>();
+
+    private List<FriendRequest> friReqList { get; set; } = new List<FriendRequest>();
+
     /// <summary>
     /// DropDown
     /// </summary>
@@ -133,20 +150,16 @@
         {
             try
             {
+
+                loginUser = await ls.GetItemAsync<int>("userId");
                 // Fetch user information by ID
-                user = await userRequest.GetByID(Uid);
+                user = await userRequest.GetByID(loginUser);
                 // Set the username
                 user.UserName = user?.UserName ?? "Unknown User";
-                await InvokeAsync(StateHasChanged);
-                // if (user.CreatedTime.HasValue)
-                // {
-                //     JoinedYear = user.CreatedTime.Value.Year;
-                // }
-                // else
-                // {
-                //     JoinedYear = 0;
-                // }
 
+                friReqList = await FriReqRequest.GetFriendRequest(loginUser);
+                await GetFriendList(loginUser);
+                await InvokeAsync(StateHasChanged);
             }
             catch (Exception ex)
             {
@@ -154,24 +167,46 @@
                 user.UserName = "Error loading user";
             }
         }
-     
+
     }
-    // private string CalculateMembershipDuration(DateTime registerDate)
-    // {
-    //     var now = DateTime.UtcNow;
-    //     var difference = now - registerDate;
 
-    //     int years = (int)(difference.Days / 365.25); // Consider leap years
-    //     int months = (int)((difference.Days % 365.25) / 30.4); // Approximate month length
+    async Task GetFriendList(int localUid)
+    {
+        friList = await FriListRequest.GetFriends(localUid);
+    }
 
-    //     if (years > 0)
-    //         return $"{years} year(s) and {months} month(s)";
-    //     else
-    //         return $"{months} month(s)";
-    // }
     private async void GoToNewFeed()
     {
         await JSRuntime.InvokeVoidAsync("navigateTo", "/");
+    }
+
+    // Accept Friend Request
+    private async Task AcceptFriendRequest(int friendRequestId)
+    {
+        await FriReqRequest.RespondFriendRequest(friendRequestId, true);
+
+        await GetFriendList(Uid);
+
+        friReqList = friReqList.Where(req => req.ID != friendRequestId).ToList();
+    }
+
+    // Decline Friend Request
+    private async Task DeclineFriendRequest(int friendRequestId)
+    {
+        await FriReqRequest.RespondFriendRequest(friendRequestId, false);
+
+        friReqList = friReqList.Where(req => req.ID != friendRequestId).ToList();
+    }
+
+    // Remove Friend 
+    private async Task RemoveFriend(int userID,int friendListId)
+    {
+        await FriListRequest.RemoveFriend(userID, friendListId);
+        await GetFriendList(Uid);
+
+        // Remove from the list
+        friList = friList.Where(flist => flist.ID != friendListId).ToList();
+
     }
 }
 
