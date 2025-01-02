@@ -73,6 +73,14 @@ namespace SocialAPI.Services.Posts
         public async Task<string> Insert(Post post)
         {
             await ProcessTags(post.Tags);
+            if(post.UploadedById != null && post.UploadedById != 0)
+            {
+                var user = await _context.Users.FindAsync(post.UploadedById);
+                if(user != null)
+                {
+                    post.UploadedUserName = user.UserName;
+                }
+            }
             post.LikeCount = 0;
             post.CommentCount = 0;
             post.CreatedTime = current;

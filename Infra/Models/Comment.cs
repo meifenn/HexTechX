@@ -16,6 +16,7 @@ namespace Infra.Models
         public string? Text { get; set; }   
         public int? PostID { get; set; }   
         public int? UserID { get; set; }    
+        public string? UserName { get; set; }
         public DateTime? CreatedTime { get; set; }  
     }
 }

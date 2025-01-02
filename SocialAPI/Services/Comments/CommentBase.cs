@@ -15,6 +15,14 @@ namespace SocialAPI.Services.Comments
         public async Task<string> InsertComment(Comment comment)
         {
             comment.CreatedTime = now;
+            if(comment.UserID != null && comment.UserID !=0)
+            {
+                var user = await _context.Users.FindAsync(comment.UserID);
+                if(user != null)
+                {
+                    comment.UserName = user.UserName;   
+                }
+            }
             await _context.Comments.AddAsync(comment);
             var res = await _context.SaveChangesAsync();
             return res == 1 ? "success" : "fail";
