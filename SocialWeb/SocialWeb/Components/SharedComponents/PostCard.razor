@@ -15,21 +15,22 @@
         </div>
         <div class="card-body">
             <p style="font:caption">@PostData.Title</p>
-            @if(!isDetail)
+            @if(isDetail == true)
             {
-                <p style="font:medium" hidden>@PostData.Description</p>
+                <p style="font:medium">@PostData.Description</p>
             }
-            else{
 
-                <p style="font:medium" class="visible">@PostData.Description</p>
-            }
             <div class="mb-2">
                 @{
-                    var tagList = PostData?.Tags.Split(",").ToList();
-                    foreach(var tag in tagList)
+                    if(!string.IsNullOrEmpty(PostData?.Tags))
                     {
-                        <div class="badge me-1">@tag</div>
+                        var tagList = PostData?.Tags.Split(",").ToList();
+                        foreach (var tag in tagList)
+                        {
+                            <div class="badge me-1">@tag</div>
+                        }
                     }
+
                 }
 
             </div>
@@ -50,8 +51,11 @@
             <hr />
             <div class="mt-3 actions">
                 <button class="btn btn-primary me-2" @onclick="HandleLike"><i class="fa-solid fa-thumbs-up"></i> Like</button>
-                <button class="btn btn-primary" @onclick="HandleComment"><i class="fa-solid fa-comment"></i> Comment</button>
-                <button class="btn btn-primary" @onclick="ShowPostDetail"><i></i>Detail</button>
+                <button class="btn btn-primary me-2" @onclick="HandleComment"><i class="fa-solid fa-comment"></i> Comment</button>
+                @if(isDetail != true)
+                {
+                    <button class="btn btn-primary" @onclick="ShowPostDetail"><i></i>Detail</button>
+                }
 
                 @if (!string.IsNullOrEmpty(AlertMessage))
                 {
@@ -75,10 +79,11 @@
     private string AlertMessage { get; set; } = string.Empty;
     [Parameter]
     public Post? PostData { get; set; }
+    [Parameter]
+    public bool? isDetail { get; set; } = false;
 
     PopUpModal popUp { get; set; }
     PostDetail postDetail { get; set; }
-    bool isDetail { get; set; } = false;
     bool IsAuthenticated { get; set; } = false;
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -97,15 +102,15 @@
     }
     void ShowPostDetail()
     {
+       // isDetail = true;
         popUp.Show();
-        isDetail = true;
     }
     void ClosePostDetailHandler()
     {
+       // isDetail = false;
         popUp.Close();
-
-        isDetail = false;
     }
+    
     async Task ShowMessageBox(string message)
     {
         await JSRuntime.InvokeVoidAsync("alert", message);

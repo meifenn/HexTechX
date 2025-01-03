@@ -20,8 +20,13 @@
     public async void Show()
     {
         ShowModal = true;
-        StateHasChanged();
-        await _js.InvokeVoidAsync("ShowModal", ModalTitle);
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(200);
+        if(ShowModal)
+        {
+            await _js.InvokeVoidAsync("ShowModal", ModalTitle);
+
+        }
         await InvokeAsync(StateHasChanged);
 
     }

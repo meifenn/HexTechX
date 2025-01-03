@@ -9,7 +9,7 @@
         </div>
         <div class="modal-body modal-body-scrollable">
             <div class="container">
-                <PostCard PostData=@post></PostCard>
+                <PostCard PostData=@post isDetail="true"></PostCard>
                 <hr />
 
                 <div class="comments-section shadow-lg rounded">
@@ -39,9 +39,11 @@
     public EventCallback ModalClose { get; set; }
     [Parameter]
     public Post? post { get; set; }
-
+  
     public async Task Close()
     {
         await ModalClose.InvokeAsync();
     }
+
+   
 }
