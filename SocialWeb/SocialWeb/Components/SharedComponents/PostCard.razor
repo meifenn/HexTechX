@@ -5,11 +5,11 @@
 <!-- Post 1 with Image-->
 @if(PostData != null)
 {
-    <div class="card mb-3" style="cursor: pointer;" @onclick="ShowPostDetail">
+    <div class="card mb-3" style="cursor: pointer;" >
         <div class="card-header d-flex align-items-center">
             <img src="image/RaidenEi.png" alt="Avatar" class="rounded-circle me-3" width="40" height="40">
             <div>
-                <h6 class="mb-0"><a herf="/Profile">@PostData.UploadedUserName</a></h6>
+                <span @onclick="FromPosttoProfile"><h6 class="mb-0">@PostData.UploadedUserName</h6></span>
                 <small>@PostData.CreatedTime?.ToString("dd MMM yyyy hh:mm tt")</small>
             </div>
         </div>
@@ -42,9 +42,9 @@
 
             <hr />
             <div class="mt-3 actions">
-                <button class="btn btn-primary me-2"><i class="fa-solid fa-thumbs-up" @onclick="HandleLike"></i> Like</button>
-                <button class="btn btn-primary"><i class="fa-solid fa-comment" @onclick="HandleComment"></i> Comment</button>
-
+                <button class="btn btn-primary me-2" @onclick="HandleLike"><i class="fa-solid fa-thumbs-up"></i> Like</button>
+                <button class="btn btn-primary" @onclick="HandleComment"><i class="fa-solid fa-comment"></i> Comment</button>
+                <button class="btn btn-primary" @onclick="ShowPostDetail"><i></i> Post Detail</button>
                 @if (!string.IsNullOrEmpty(AlertMessage))
                 {
                     <div class="alert alert-danger mt-3" role="alert">
@@ -98,9 +98,11 @@
     {
         await JSRuntime.InvokeVoidAsync("alert", message);
     }
+    private async void FromPosttoProfile() => await JSRuntime.InvokeVoidAsync("navigateTo", $@"/profile/{PostData.UploadedById}");
+
     async Task CheckAuthenticationStatus()
     {
-        var authStatus = await ls.GetItemAsync<int?>("ID"); // Assuming "ID" is nullable
+        var authStatus = await ls.GetItemAsync<int?>("userId"); // Assuming "ID" is nullable
         IsAuthenticated = authStatus.HasValue; // Check if the ID exists and is valid
     }
     void HandleLike()
