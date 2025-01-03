@@ -15,6 +15,14 @@
         </div>
         <div class="card-body">
             <p style="font:caption">@PostData.Title</p>
+            @if(!isDetail)
+            {
+                <p style="font:medium" hidden>@PostData.Description</p>
+            }
+            else{
+
+                <p style="font:medium" class="visible">@PostData.Description</p>
+            }
             <div class="mb-2">
                 @{
                     var tagList = PostData?.Tags.Split(",").ToList();
@@ -25,26 +33,26 @@
                 }
 
             </div>
-            @if (!string.IsNullOrEmpty(PostData?.PhotoDatas))
-            {
-                <div class="d-flex images">
-                    @{
-                        var photoList = PostData?.PhotoDatas.Split(",").ToList();
-                        foreach(var photo in photoList)
-                        {
-                            var photoPath = $@"/image/{photo}";
-                            <img src=@photoPath class="img-thumbnail me-2" alt="Image 1" />
-                        }
+            <div class="image-grid">
+                @if (!string.IsNullOrEmpty(PostData?.PhotoDatas))
+                {
+                    var photoList = PostData.PhotoDatas.Split(",").Take(4).ToList(); // Max 4 images
+                    foreach (var photo in photoList)
+                    {
+                        var photoPath = $"/image/{photo}";
+                        <div class="image-container">
+                            <img src="@photoPath" alt="Image" />
+                        </div>
                     }
-
-                </div>
-            }
+                }
+            </div>
 
             <hr />
             <div class="mt-3 actions">
                 <button class="btn btn-primary me-2" @onclick="HandleLike"><i class="fa-solid fa-thumbs-up"></i> Like</button>
                 <button class="btn btn-primary" @onclick="HandleComment"><i class="fa-solid fa-comment"></i> Comment</button>
-                <button class="btn btn-primary" @onclick="ShowPostDetail"><i></i> Post Detail</button>
+                <button class="btn btn-primary" @onclick="ShowPostDetail"><i></i>Detail</button>
+
                 @if (!string.IsNullOrEmpty(AlertMessage))
                 {
                     <div class="alert alert-danger mt-3" role="alert">
@@ -70,6 +78,7 @@
 
     PopUpModal popUp { get; set; }
     PostDetail postDetail { get; set; }
+    bool isDetail { get; set; } = false;
     bool IsAuthenticated { get; set; } = false;
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -89,10 +98,13 @@
     void ShowPostDetail()
     {
         popUp.Show();
+        isDetail = true;
     }
     void ClosePostDetailHandler()
     {
         popUp.Close();
+
+        isDetail = false;
     }
     async Task ShowMessageBox(string message)
     {
