@@ -87,7 +87,7 @@
             {
                 @foreach (var post in postList)
                 {
-                    <PostCard PostData="post"></PostCard>
+                    <PostCard PostData="post" isDetail="false" loggedInUserId="UserId" IsAuthenticated=@IsAuthenticated></PostCard>
                 }
             }else{
                 <div class="fs-16 w-100 justify-content-center align-items-center">No Posts Yet...</div>

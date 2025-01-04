@@ -6,5 +6,6 @@ namespace SocialAPI.Services.Comments
     {
         Task<string> InsertComment(Comment comment);
         Task<string> DeleteComment(int commentId);
+        Task<List<Comment>> GetComments(int? postId = 0);
     }
 }

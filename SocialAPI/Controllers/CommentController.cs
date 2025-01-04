@@ -25,6 +25,11 @@ namespace SocialAPI.Controllers
             var res = await _iComment.DeleteComment(commentId);
             return Ok(res);
         }
-
+        [HttpGet("get")]
+        public async Task<IActionResult> GetComments(int? postId = 0)
+        {
+            var res = await _iComment.GetComments(postId);
+            return Ok(res);
+        }
     }
 }

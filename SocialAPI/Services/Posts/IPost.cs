@@ -11,5 +11,7 @@ namespace SocialAPI.Services.Posts
         Task<string> Delete(int id);
         Task<Post> GetByID(int id);
         Task<string> ProcessLikeCount(int postId = 0, bool isIncreasing = true);
+        Task<string> ProcessCommentCount(int postId = 0, bool isIncreasing = true);
+
     }
 }

@@ -23,6 +23,13 @@ namespace Infra.Helpers.ApiRequestHelper.CommentApiRequest
             return model;
         }
 
+        public async Task<List<Comment>> GetComments(int? postId = 0)
+        {
+            string url = $@"{ApiUrl.Url}api/comments/get?postId={postId}";
+            var model = await _apiRequest.GetAsync<List<Comment>>(url);
+            return model;
+        }
+
         public async Task<string> InsertComment(Comment comment)
         {
             string url = $@"{ApiUrl.Url}api/comments/insert";

@@ -13,19 +13,37 @@
                 <hr />
 
                 <div class="comments-section shadow-lg rounded">
-                    <div class="comment ps-3 pt-2">
-                        <img src="image/RaidenEi.png" class="profile-pic" alt="Profile Picture">
-                        <div class="comment-text">
-                            <h6><strong>ppm</strong></h6>
-                            <small>12/25/2024</small>
-                            <hr />
-                            <p>Woooooo.</p>
+                    @if(commentList != null && commentList.Count() > 0)
+                    {
+                        @foreach(var comment in commentList)
+                        {
+                            <div class="comment ps-3 pt-2">
+                                <img src="image/RaidenEi.png" class="profile-pic" alt="Profile Picture">
+                                <div class="comment-text">
+                                    <h6><strong>@comment.UserName</strong></h6>
+                                    <small>@comment.CreatedTime?.ToString("dd MMM yyyy hh:mm tt")</small>
+                                    <hr />
+                                    <p>@comment.Text</p>
+                                </div>
+                            </div>
+                        }
+                    }
+                    @if(IsAuthenticated)
+                    {
+                        <div class="comment-input d-flex align-items-center w-100 mb-3 ps-3 pe-3">
+                            <input type="text" @bind="@comment.Text" class="form-control me-2" placeholder="Post your comment...">
+                            <button type="button" @onclick=InsertComment class="btn btn-primary @(btnDisabled ? "disabled" : "")" disabled=@btnDisabled><i class="bi bi-send"></i></button>
+                            @if (errorMessage != null)
+                            {
+                                <p class="fs-14 text-danger">@errorMessage</p>
+                            }
                         </div>
-                    </div>
-                    <div class="comment-input d-flex align-items-center w-100 mb-3 ps-3 pe-3">
-                        <input type="text" class="form-control me-2" placeholder="Post your comment...">
-                        <button class="btn btn-primary"><i class="bi bi-send"></i></button>
-                    </div>
+                    }else{
+                        <div class="comment-input d-flex align-items-center w-100 mb-3 ps-3 pe-3">
+                            <input type="text" class="form-control disabled me-2" disabled placeholder="Please login first to post comment...">
+                        </div>
+                    }
+                   
                 </div>
             </div>
         </div>
@@ -35,11 +53,61 @@
 </div>
 
 @code {
+    @inject ICommentApiRequest commentRequest;
     [Parameter]
     public EventCallback ModalClose { get; set; }
     [Parameter]
     public Post? post { get; set; }
-  
+    [Parameter]
+    public bool IsAuthenticated { get; set; } = false;
+    [Parameter]
+    public int? LoggedInUserId { get; set; }
+
+    List<Comment> commentList { get; set; } = new();
+    Comment comment { get; set; } = new();
+
+    string? errorMessage { get; set; }
+    bool btnDisabled { get; set; } = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender)
+        {
+            if(post != null && post.ID != 0)
+            {
+                await GetComments();
+            }
+        }
+    }
+    async Task GetComments()
+    {
+        commentList = await commentRequest.GetComments(post.ID);
+        await InvokeAsync(StateHasChanged);
+    }
+    async Task InsertComment()
+    {
+        errorMessage = null;
+        btnDisabled = true;
+        if(string.IsNullOrWhiteSpace(comment.Text))
+        {
+            errorMessage = "Comment text cannot be empty";
+            btnDisabled = false;
+            StateHasChanged();
+            return;
+        }
+        comment.UserID = LoggedInUserId;
+        comment.PostID = post.ID;
+
+        var res = await commentRequest.InsertComment(comment);
+        if(res == "success")
+        {
+            commentList.Add(comment); //add to display new comment
+            comment = new(); //reset comment obj
+        }
+        btnDisabled = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
     public async Task Close()
     {
         await ModalClose.InvokeAsync();

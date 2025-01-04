@@ -14,6 +14,7 @@ namespace SocialAPI.Services.Likes
         {
             _context = ctx;
             _post = post;
+            now = DateTime.Now;
         }
         public async Task<string> ProcessLike(int userId = 0, int postId = 0)
         {
@@ -35,13 +36,14 @@ namespace SocialAPI.Services.Likes
                 };
                 await _context.Likes.AddAsync(like);
                 var res = await _post.ProcessLikeCount(postId, true);
+                return "like success";
             }
             else //do unlike
             {
                 _context.Likes.Remove(existing);
                 var res = await _post.ProcessLikeCount(postId, false);
+                return "unlike success";
             }
-            return "success";
         }
     }
 }

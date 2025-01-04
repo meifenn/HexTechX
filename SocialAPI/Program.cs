@@ -49,7 +49,8 @@ builder.Services.AddScoped<ILike>(s => new LikeBase(
     s.GetService<IPost>()
     ));
 builder.Services.AddScoped<IComment>(s => new CommentBase(
-    s.GetService<AppDbContext>()
+    s.GetService<AppDbContext>(),
+    s.GetService<IPost>()
     ));
 builder.Services.AddScoped<IFriend>(s => new FriendBase(
     s.GetService<AppDbContext>()

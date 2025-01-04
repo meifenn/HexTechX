@@ -24,7 +24,7 @@ namespace Infra.Helpers.ApiRequestHelper.LikeApiRequest
             };
             string url = $@"{ApiUrl.Url}api/likes/processlike";
             var model = await _apiRequest.PostAsync<LikeViewModel, string>(url, likevm);
-            throw new NotImplementedException();
+            return model;
         }
     }
 }

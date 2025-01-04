@@ -57,8 +57,8 @@
 
             <hr />
             <div class="mt-3 actions">
-                <button class="btn btn-primary me-2" style="font-size:small" @onclick="HandleLike"><i class="fa-solid fa-thumbs-up"></i> Like (@PostData.LikeCount)</button>
-                <button class="btn btn-primary me-2" style="font-size:small" @onclick="HandleComment"><i class="fa-solid fa-comment"></i> Comment (@PostData.CommentCount)</button>
+                <button class="btn btn-primary me-2" style="font-size:small" @onclick="()=>HandleLike(PostData.ID)"><i class="fa-solid fa-thumbs-up"></i> Like (@(PostData?.LikeCount?.ToString() ?? "0"))</button>
+                <button class="btn btn-primary me-2" style="font-size:small" @onclick="ShowPostDetail"><i class="fa-solid fa-comment"></i> Comment (@(PostData?.CommentCount?.ToString() ?? "0"))</button>
                 @if(isDetail != true)
                 {
                     <span class="fs-16 ps-2" style=" font-size:small;" @onclick="ShowPostDetail">Detail</span>
@@ -77,28 +77,36 @@
 }
 
 <PopUpModal @ref="popUp" CloseCallBack="ClosePostDetailHandler" ModalTitle="PostDetail">
-    <PostDetail @ref="postDetail" post=@PostData ModalClose="ClosePostDetailHandler"></PostDetail>
+    <PostDetail @ref="postDetail"
+        post=@PostData 
+        ModalClose="ClosePostDetailHandler"
+        IsAuthenticated=@IsAuthenticated
+        LoggedInUserId=@loggedInUserId></PostDetail>
 </PopUpModal>
 
 
 @code {
+    @inject ILikeApiRequest likeRequest;
 
     private string AlertMessage { get; set; } = string.Empty;
     [Parameter]
     public Post? PostData { get; set; }
     [Parameter]
     public bool? isDetail { get; set; } = false;
+    [Parameter]
+    public int? loggedInUserId { get; set; }
+    [Parameter]
+    public bool IsAuthenticated { get; set; } = false;
+
 
     PopUpModal popUp { get; set; }
     PostDetail postDetail { get; set; }
-    bool IsAuthenticated { get; set; } = false;
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if(firstRender)
         {
             try
             {
-                await CheckAuthenticationStatus();
                 await InvokeAsync(StateHasChanged);
             }
             catch (Exception ex)
@@ -115,34 +123,34 @@
     {
         popUp.Close();
     }
-    
+
     async Task ShowMessageBox(string message)
     {
         await JSRuntime.InvokeVoidAsync("alert", message);
     }
     private async void FromPosttoProfile() => await JSRuntime.InvokeVoidAsync("navigateTo", $@"/profile/{PostData.UploadedById}");
 
-    async Task CheckAuthenticationStatus()
-    {
-        var authStatus = await ls.GetItemAsync<int?>("userId"); // Assuming "ID" is nullable
-        IsAuthenticated = authStatus.HasValue; // Check if the ID exists and is valid
-    }
-    void HandleLike()
+
+    async Task HandleLike(int postId)
     {
         if (!IsAuthenticated)
         {
             ShowAlert("You must be logged in to Like a post.");
+            return;
         }
-    }
-
-    void HandleComment()
-    {
-        if (!IsAuthenticated)
+        var res = await likeRequest.ProcessLike(loggedInUserId ?? 0, postId);
+        if (res == "like success")
         {
-            ShowAlert("You must be logged in to Comment on a post.");
+            PostData.LikeCount += 1;
         }
-
+        else if (res == "unlike success")
+        {
+            PostData.LikeCount -= 1;
+        }
+        await InvokeAsync(StateHasChanged);
     }
+
+   
     void ShowAlert(string message)
     {
         ClearAlert();

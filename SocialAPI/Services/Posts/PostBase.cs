@@ -136,6 +136,21 @@ namespace SocialAPI.Services.Posts
             }
 
             post.LikeCount = isIncreasing ? post.LikeCount + 1 : post.LikeCount - 1;
+            post.ModifiedTime = current;
+            _context.Posts.Update(post);
+            var res = await _context.SaveChangesAsync();
+            return res == 1 ? "success" : "fail";
+        }
+        public async Task<string> ProcessCommentCount(int postId = 0, bool isIncreasing = true)
+        {
+            var post = await GetByID(postId);
+            if (post.ID == 0)
+            {
+                return "empty post";
+            }
+
+            post.CommentCount = isIncreasing ? post.CommentCount + 1 : post.CommentCount - 1;
+            post.ModifiedTime = current;
             _context.Posts.Update(post);
             var res = await _context.SaveChangesAsync();
             return res == 1 ? "success" : "fail";
