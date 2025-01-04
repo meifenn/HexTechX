@@ -9,7 +9,14 @@
         <div class="card-header d-flex align-items-center">
             <img src="image/RaidenEi.png" alt="Avatar" class="rounded-circle me-3" width="40" height="40">
             <div>
-                <span @onclick="FromPosttoProfile"><h6 class="mb-0">@PostData.UploadedUserName</h6></span>
+                @if(!IsAuthenticated)
+                {
+                    <span><h6 class="mb-0">@PostData.UploadedUserName</h6></span>
+                }
+                else
+                {
+                    <span @onclick="FromPosttoProfile"><h6 class="mb-0">@PostData.UploadedUserName</h6></span>
+                }
                 <small>@PostData.CreatedTime?.ToString("dd MMM yyyy hh:mm tt")</small>
             </div>
         </div>
@@ -102,12 +109,10 @@
     }
     void ShowPostDetail()
     {
-       // isDetail = true;
         popUp.Show();
     }
     void ClosePostDetailHandler()
     {
-       // isDetail = false;
         popUp.Close();
     }
     
