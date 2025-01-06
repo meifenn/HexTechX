@@ -81,19 +81,33 @@
                     Post something new...
                 </button>
             </div>
-         
+
             <div class="d-flex flex-column post-fixed-height" id="scroll-container">
-            @if (postList.Count() > 0)
-            {
-                @foreach (var post in postList)
+                @if (IsLoading)
                 {
-                    <PostCard PostData="post" isDetail="false" loggedInUserId="UserId" IsAuthenticated=@IsAuthenticated></PostCard>
+                    <div class="d-flex w-100 fs-18">
+                        Loading post feed...
+                    </div>
                 }
-            }else{
-                <div class="fs-16 w-100 justify-content-center align-items-center">No Posts Yet...</div>
-            }
+                else
+                {
+                    @if (postList.Count() > 0)
+                    {
+                        @foreach (var post in postList)
+                        {
+                            <PostCard PostData="post" isDetail="false" loggedInUserId="UserId" IsAuthenticated=@IsAuthenticated></PostCard>
+                        }
+                    }
+                    else
+                    {
+                        <div class="fs-16 w-100 justify-content-center align-items-center">No Posts Yet...</div>
+                    }
+                }
             </div>
             
+
+            
+
 
             @*    <div class="card mb-3" @onclick="()=>ShowPostDetailModal(1)">
                 <div class="card-header align-items-center">
@@ -134,12 +148,12 @@
     [Inject]
     IPostApiRequest postRequest { get; set; }
 
-    bool IsAuthenticated { get; set; } = false;
     PopUpModal popUp { get; set; }
-    CreateEditPost createPopUp { get; set; } = new CreateEditPost();
-    List<Tag> tagList { get; set; } = new List<Tag>();
-    Paging<Post> posts { get; set; } = new Paging<Post>();
-    List<Post> postList { get; set; } = new List<Post>();
+    CreateEditPost createPopUp { get; set; }
+    List<Tag> tagList { get; set; } = new();
+    Paging<Post> posts { get; set; } = new();
+    List<Post> postList { get; set; } = new();
+    Post detailPost { get; set; } = new();
 
     int totalPages { get; set; }
     int page = 1;
@@ -147,16 +161,18 @@
     int? UserId { get; set; }
     string? search { get; set; }
     string? selctag { get; set; }
-    Post detailPost { get; set; } = new Post();
-    
+    bool IsAuthenticated { get; set; } = false;
+    bool IsLoading { get; set; } = true;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if(firstRender)
         {
+            IsLoading = true;
             await CheckAuthenticationStatus();
             await GetTags();
             await GetPosts();
+            IsLoading = false;
             await JSRuntime.InvokeVoidAsync("registerScrollEvent", DotNetObjectReference.Create(this));
             await InvokeAsync(StateHasChanged);
         }

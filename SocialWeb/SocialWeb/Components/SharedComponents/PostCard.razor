@@ -6,17 +6,10 @@
 @if(PostData != null)
 {
     <div class="card mb-3" style="cursor: pointer;" >
-        <div class="card-header d-flex align-items-center">
+        <div class="card-header d-flex align-items-center" @onclick="FromPosttoProfile" style="cursor:pointer;">
             <img src="image/RaidenEi.png" alt="Avatar" class="rounded-circle me-3" width="40" height="40">
-            <div>
-                @if(!IsAuthenticated)
-                {
-                    <span><h6 class="mb-0">@PostData.UploadedUserName</h6></span>
-                }
-                else
-                {
-                    <span @onclick="FromPosttoProfile"><h6 class="mb-0">@PostData.UploadedUserName</h6></span>
-                }
+            <div class="d-flex flex-column">
+                <span><h6 class="mb-0">@PostData.UploadedUserName</h6></span>
                 <small>@PostData.CreatedTime?.ToString("dd MMM yyyy hh:mm tt")</small>
             </div>
         </div>
@@ -128,8 +121,15 @@
     {
         await JSRuntime.InvokeVoidAsync("alert", message);
     }
-    private async void FromPosttoProfile() => await JSRuntime.InvokeVoidAsync("navigateTo", $@"/profile/{PostData.UploadedById}");
-
+    private async void FromPosttoProfile()
+    {
+        if(IsAuthenticated)
+        {
+            await JSRuntime.InvokeVoidAsync("navigateTo", $@"/profile/{PostData.UploadedById}");
+        }else{
+            ShowAlert("You must be logged in to view profile.");
+        }
+    }
 
     async Task HandleLike(int postId)
     {
