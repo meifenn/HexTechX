@@ -59,6 +59,11 @@ namespace SocialAPI.Services.Posts
             {
                 query = query.Where(post => post.Tags.Contains(tag));
             }
+            if(userId != null && userId != 0)
+            {
+                query = query.Where(post => post.UploadedById == userId);
+            }
+
             query = query.OrderByDescending(a => a.CreatedTime);
             var pagedList = await query.Skip(pageSize * (page - 1)).Take(pageSize).ToListAsync();
             Paging<Post> data = new Paging<Post>();

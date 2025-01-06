@@ -131,8 +131,30 @@
             </div>
             <!-- Posts -->
             <section class="posts">
-                <h3 class="mb-3">Posts</h3>
-                <PostCard></PostCard>
+                <h3 class="mb-3 fs-16">Posts</h3>
+                <div class="d-flex flex-column post-fixed-height" id="scroll-container">
+                    @if (IsLoading)
+                    {
+                        <div class="d-flex w-100 fs-18">
+                            Loading post feed...
+                        </div>
+                    }
+                    else
+                    {
+                        @if (postList.Count() > 0)
+                        {
+                            @foreach (var post in postList)
+                            {
+                                <PostCard PostData="post" isDetail="false" loggedInUserId="loginUserId" IsAuthenticated=@true></PostCard>
+                            }
+                        }
+                        else
+                        {
+                            <div class="fs-16 w-100 justify-content-center align-items-center">No Posts Yet...</div>
+                        }
+                    }
+                </div>
+
             </section>
         </main>
     </div>
@@ -146,6 +168,8 @@
     IFriendApiRequest FriListRequest { get; set; }
     [Inject]
     IFriendRequestApiRequest FriReqRequest { get; set; }
+    [Inject]
+    IPostApiRequest PostRequest { get; set; }
 
     [Parameter]
     public int userId { get; set; }
@@ -153,14 +177,19 @@
     UserProfile user { get; set; } = new();
     List<User> friList { get; set; } = new();
     List<FriendRequest> friReqList { get; set; } = new();
+    List<Post> postList { get; set; } = new();
 
     public int loginUserId { get; set; } = 0;
+    int page = 1;
+    int pageSize = 3;
+    int totalPages { get; set; }
     /// <summary>
     /// DropDown
     /// </summary>
     bool isDropdownVisibleFriList { get; set; } = false; 
     bool isDropdownVisibleFriReq { get; set; } = false;
     bool isOwnProfile { get; set; } = false;
+    bool IsLoading { get; set; } = true;
 
     private void ToggleFriendList()
     {
@@ -177,7 +206,13 @@
         {
             try
             {
+                IsLoading = true;
                 loginUserId = await ls.GetItemAsync<int>("userId");
+                if(loginUserId == 0)
+                {
+                    await JSRuntime.InvokeVoidAsync("navigateTo", "/Login");
+                    return;
+                }
                 isOwnProfile = userId == loginUserId ? true : false;
                 user = await userRequest.GetProfile(loginUserId, userId);
 
@@ -185,7 +220,10 @@
                 {
                     await GetFriendReqList(userId);
                 }
+                await GetPosts(userId);
+                IsLoading = false;
                 await GetFriendList(userId);
+                await JSRuntime.InvokeVoidAsync("registerScrollEvent", DotNetObjectReference.Create(this));
                 await InvokeAsync(StateHasChanged);
             }
             catch (Exception ex)
@@ -203,6 +241,29 @@
     async Task GetFriendList(int localUid)
     {
         friList = await FriListRequest.GetFriends(localUid);
+    }
+    async Task GetPosts(int uploadedById)
+    {
+        var posts = await PostRequest.GetPaging(page, pageSize, null, uploadedById, null);
+        totalPages = posts.TotalPages ?? 0;
+        if (posts.Results != null && posts.Results.Count() > 0)
+        {
+            postList.AddRange(posts.Results);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+    [JSInvokable]
+    public async Task OnScrollReachedBottom()
+    {
+        if ((page + 1) > totalPages)
+        {
+            return;
+        }
+        else
+        {
+            page = page + 1;
+            await GetPosts(userId);
+        }
     }
 
     private async void GoToNewFeed()
