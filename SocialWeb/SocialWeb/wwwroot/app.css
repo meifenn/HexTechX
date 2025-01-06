@@ -519,27 +519,17 @@ body {
     border-radius: 3px;
 }
 
-/*.modal {
-    width: 1300px !important;*/ /* Set width to 1000px */
-    /*height: 1200px !important;*/ /* Set height to 1000px */
-    /*max-width: 1300px;*/ /* Ensure responsiveness */
-    /*max-height: 100%;*/ /* Prevent overflow */
-    /*margin: auto;*/ /* Center the modal */
-    /*padding: 20px;*/ /* Optional padding */
-    /*overflow: hidden;*/ /* Add scrollbars if content overflows */
-/*}*/
-
 .modal-dialog {
-    display: flex; /* Ensure modal content is properly aligned */
+    display: flex; 
     justify-content: center;
     align-items: center;
     width: 100%;
-    height: 100%; /* Maintain full height */
+    height: 100%; 
 }
 
 .modal-content {
-    width: 1300px; /* Ensure the content takes full width */
-    height: 1000px; /* Ensure the content takes full height */
+    width: 1300px; 
+    height: 1000px;
 }
 
 .modal-header {
@@ -568,9 +558,17 @@ body {
     padding: 10px;
     border-top: 1px solid #ddd;
 }
+.post-comments {
+    display: flex;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+}
 
 .comments-section {
     display: flex;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    margin-bottom: 20px;
     flex-direction: column;
 }
 
